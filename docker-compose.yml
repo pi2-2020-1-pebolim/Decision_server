@@ -1,0 +1,9 @@
+version: '2'
+services:
+    app:
+        container_name: 'decision_server'
+        build: .
+        ports:
+            - '3333:3333'
+        volumes:
+            - '.:/app'
