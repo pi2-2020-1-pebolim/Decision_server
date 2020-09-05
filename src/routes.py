@@ -1,11 +1,25 @@
 
-from flask import jsonify
+from flask import jsonify, render_template, request
+from controllers.image_controller import ImageController
 
-def routes(app):
-    @app.route('/')
-    def main_route():
-        result = jsonify({
-            'test': 'test'
-        })
 
-        return result
+class Route:
+    def __init__(self, app):
+        self.app = app
+        self.image_inst = ImageController()
+
+    def routes(self):
+        @self.app.route('/save')
+        def main_route():
+            return render_template('index.html')
+
+        @self.app.route('/', methods=['POST', 'GET'])
+        def render_image():
+            if request.method == 'POST':
+                return self.image_inst.processingImage()
+            else:
+                result = jsonify({
+                    'hello': 'world'
+                })
+
+                return result
