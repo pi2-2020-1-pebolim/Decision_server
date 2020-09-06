@@ -1,7 +1,7 @@
 
-from flask import jsonify, render_template, request
+from flask import jsonify, render_template, request, make_response
 from controllers.image_controller import ImageController
-from flask_socketio import emit
+from flask_socketio import emit, send
 
 
 class Route:
@@ -14,6 +14,17 @@ class Route:
     def routes(self):
         @self.app.route('/save')
         def main_route():
+            @self.socketio.on('image_transfer')
+            def get_image_event(json):
+                self.socketio.emit('update_image', json)
+                # emit('back_resp', json)
+
+            @self.socketio.on('test')
+            def get_teste(json):
+                return jsonify({
+                    'hello': 'world'
+                })
+            
             return render_template('index.html', image=self.image)
 
         @self.app.route('/', methods=['POST', 'GET'])
@@ -25,15 +36,6 @@ class Route:
                 result = jsonify({
                     'hello': 'world'
                 })
+                self.socketio.emit('update_image', result)
 
                 return result
-
-        @self.socketio.on('image_transfer')
-        def get_image_event(json):
-            emit('update_image', json)
-
-        @self.socketio.on('test', namespace='/test')
-        def get_teste(json):
-            emit('update_image', jsonify({
-                'test': 'test'
-            }))
