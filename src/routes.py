@@ -1,5 +1,5 @@
 
-from flask import jsonify, render_template, request, make_response
+from flask import jsonify, render_template, request, make_response, json
 from controllers.image_controller import ImageController
 from flask_socketio import emit, send
 
@@ -15,9 +15,10 @@ class Route:
         def main_route():
             @self.socketio.on('image_transfer')
             def get_image_event(json):
-                img = self.image_inst.processingImage(json['image'])
-                img_str = f"data:image/jpeg;base64,{img}" 
-                self.socketio.emit('update_image', json)
+                encoded_image = self.image_inst.processingImage(json['image'])
+                self.socketio.emit('update_image', {
+                    'image': f"data:image/jpeg;base64,{encoded_image}"
+                })
                 # emit('back_resp', json)
 
             @self.socketio.on('test')

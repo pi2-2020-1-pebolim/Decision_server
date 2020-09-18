@@ -10,10 +10,12 @@ class ImageController:
         self.app = app
 
     def processingImage(self, image):
-        encoded_data = image.split(',')[1]
-        decode_image = Base64Convertion().decode_base_64(encoded_data)
-        imgdata = Image.open(io.BytesIO(decode_image))
-        transform_image = cv.cvtColor(np.array(imgdata), cv.COLOR_BGR2GRAY)
-        encode_image = Base64Convertion().encode_base_64(transform_image)
-        return encode_image
+        image_string = image.split(',')[1]
+        decoded_string = Base64Convertion().decode_base_64(image_string)
+        decoded = cv.imdecode(np.frombuffer(decoded_string, np.uint8), -1)
+        transform_image = cv.cvtColor(decoded, cv.COLOR_BGR2GRAY)
+        is_success, gray_image_array = cv.imencode('.jpg', transform_image)
+        gray_image = Image.fromarray(gray_image_array)
+        encoded_gray_image = Base64Convertion().encode_base_64(gray_image.tobytes()).decode('ascii')
+        return encoded_gray_image
 
