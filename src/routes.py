@@ -2,13 +2,14 @@
 from flask import jsonify, render_template, request, make_response
 from controllers.image_controller import ImageController
 from flask_socketio import emit, send
+import logging
 
 
 class Route:
     def __init__(self, app, socketio):
         self.app = app
         self.socketio = socketio
-        self.image_inst = ImageController()
+        self.image_inst = ImageController(self.app)
         self.image = ''
 
     def routes(self):
@@ -16,6 +17,7 @@ class Route:
         def main_route():
             @self.socketio.on('image_transfer')
             def get_image_event(json):
+                self.image_inst.processingImage(json['image'])
                 self.socketio.emit('update_image', json)
                 # emit('back_resp', json)
 

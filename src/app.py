@@ -2,11 +2,13 @@ from flask import Flask
 from flask_cors import CORS
 from flask_socketio import SocketIO
 from routes import Route
+import logging
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret_pi2!'
 socketio = SocketIO(app, cors_allowed_origins="*")
 routes_inst = Route(app, socketio)
+logging.basicConfig(level=logging.DEBUG)
 
 cors = CORS(app)
 routes_inst.routes()
