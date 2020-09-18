@@ -8,6 +8,10 @@ RUN apt-get update -y && \
     apt-get install -y python3-pip python3-dev && \
     apt-get install -y cmake
 
+RUN apt-get install 'ffmpeg'\
+    'libsm6'\ 
+    'libxext6'  -y
+
 COPY requirements.txt /app/requirements.txt
 
 WORKDIR /app
