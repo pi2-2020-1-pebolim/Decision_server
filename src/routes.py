@@ -18,7 +18,7 @@ class Route:
 
         @self.app.route('/save')
         def main_route():
-            return render_template('index.html', image=self.image)
+            return render_template('index.html', image='')
 
         @self.app.route('/', methods=['POST', 'GET'])
         def render_image():
