@@ -37,7 +37,6 @@ class Route:
       
         @self.socketio.on('status_update')
         def get_image_event(json):
-            
             json = loads(json)
 
             encoded_image = self.image_inst.processingImage(json['camera']['image'])
@@ -45,10 +44,4 @@ class Route:
                 'image': f"data:image/jpeg;base64,{encoded_image}"
             })
             # emit('back_resp', json)
-
-        @self.socketio.on('test')
-        def get_teste(json):
-            return jsonify({
-                'hello': 'world'
-            })
             

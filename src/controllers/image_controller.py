@@ -10,8 +10,7 @@ class ImageController:
         self.app = app
 
     def processingImage(self, image):
-        image_string = image.split(',')[1]
-        decoded_string = Base64Convertion().decode_base_64(image_string)
+        decoded_string = Base64Convertion().decode_base_64(image)
         decoded = cv.imdecode(np.frombuffer(decoded_string, np.uint8), -1)
         # transform_image = cv.cvtColor(decoded, cv.COLOR_BGR2GRAY)
 
@@ -59,19 +58,19 @@ class ImageController:
         # resize the frame, blur it, and convert it to the HSV
         # color space
         frame = imutils.resize(frame, width=600)
-        blurred = cv2.GaussianBlur(frame, (11, 11), 0)
-        hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
+        blurred = cv.GaussianBlur(frame, (11, 11), 0)
+        hsv = cv.cvtColor(blurred, cv.COLOR_BGR2HSV)
 
         # construct a mask for the color "green", then perform
         # a series of dilations and erosions to remove any small
         # blobs left in the mask
-        mask = cv2.inRange(hsv, greenLower, greenUpper)
-        mask = cv2.erode(mask, None, iterations=2)
-        mask = cv2.dilate(mask, None, iterations=2)
+        mask = cv.inRange(hsv, greenLower, greenUpper)
+        mask = cv.erode(mask, None, iterations=2)
+        mask = cv.dilate(mask, None, iterations=2)
 
         # find contours in the mask and initialize the current
         # (x, y) center of the ball
-        cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cnts = cv.findContours(mask.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
         cnts = imutils.grab_contours(cnts)
         center = None
 
@@ -80,8 +79,8 @@ class ImageController:
             # find the largest contour in the mask, then use
             # it to compute the minimum enclosing circle and
             # centroid
-            c = max(cnts, key=cv2.contourArea)
-            ((x, y), radius) = cv2.minEnclosingCircle(c)
-            M = cv2.moments(c)
+            c = max(cnts, key=cv.contourArea)
+            ((x, y), radius) = cv.minEnclosingCircle(c)
+            M = cv.moments(c)
             center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
         return center
