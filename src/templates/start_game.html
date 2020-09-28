@@ -2,36 +2,95 @@
 
 {% block head %}
     {{ super() }}
-    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/calibration.css') }}">
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/start-board.css') }}">
 {% endblock %}
 
 {% block content %}
-    <div class="calibration-wrapper">
-        <div class="header-wrapper">
-            <div class="img-card">
-                <img id="img-field" src="/static/img/field_1.png" alt="field">
+    <div class="start-wrapper">
+        <div class="scoreboard">
+            <div class="title">
+                <span class="title-scoreboard">Placar</span>
             </div>
-            <div class="scoreboard">
-                <div class="timer">
-                    <div class="minute">00</div>:
-                    <div class="seconds">00</div>
+            <div class="timer">
+                <div id="minutes" class="minute">00</div>
+                <span>:</span>
+                <div id="seconds" class="seconds">00</div>
+            </div>
+            <div class="score">
+                <div class="pontuation">
+                    <span>Casa</span>
+                    <div class="home">
+                        00
+                    </div>
+                </div>
+                <div class="pontuation">
+                    <span>Visitante</span>
+                    <div class="visitor">
+                        00
+                    </div>
                 </div>
             </div>
         </div>
-        <button onclick="changeStep()">Calibrar</button>
-        <!-- <img src="" alt=""> -->
+        <div class="start-action">
+            <button id="minus" class="time-man" onclick="manipulation('minus')">-</button>
+            <button id="btn-calibration" onclick="start()">Começar</button>
+            <button id="plus" class="time-man" onclick="manipulation('plus')">+</button>
+        </div>
     </div>
 
     <script>
-        var step_img = 2;
+        var minutes = 10;
+        var seconds = 00;
+        var secondElem = document.getElementById('seconds');
+        var minuteElem = document.getElementById('minutes');
+        var minus = document.getElementById('minus');
+        var plus = document.getElementById('plus');
 
-        function changeStep() {
-            if(step_img < 6) {
-                var image_field = document.getElementById('img-field');
-                image_field.src = `/static/img/field_${step_img++}.png`;
-                console.log(step_img);
+        minuteElem.innerText = minutes;
+        secondElem.innerText = '0' + seconds;
+        if (minutes === 10) {
+            minus.setAttribute('disabled', true);
+            minus.style.opacity = 0.6;
+        }
+
+        function timeout(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function start() {
+            while (minutes != 0 || seconds != 0) {
+                await timeout(1000);
+                if(seconds == 0) {
+                    seconds = 60;
+                    minutes = minutes - 1; 
+
+                    minuteElem.innerText = minutes < 10 ? '0' + String(minutes) : minutes;
+                    secondElem.innerText = seconds < 10 ? '0' + String(seconds) : seconds;
+                } else {
+                    seconds = seconds - 1;
+
+                    secondElem.innerText = seconds < 10 ? '0' + String(seconds) : seconds;
+                }
+            }
+        }
+
+        function manipulation(action) {
+            console.log('passou')
+            if (action == 'plus') { 
+                minutes = minutes + 10 
+            } else { 
+                minutes = minutes - 10 
+            }
+
+            minuteElem.innerText = minutes;
+            minus.disabled = minutes == 10 ? true : false;
+            
+            if (minutes === 10) {
+                minus.setAttribute('disabled', true);
+                minus.style.opacity = 0.6;
             } else {
-                window.location.replace("/start");
+                minus.removeAttribute('disabled');
+                minus.style.opacity = 1;
             }
         }
     </script>
