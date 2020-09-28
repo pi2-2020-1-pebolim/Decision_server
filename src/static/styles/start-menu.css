@@ -1,0 +1,28 @@
+.content-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+}
+
+.content-wrapper span {
+    margin-left: 15px;
+    color: #333;
+    font-weight: bold;
+    font-size: 45px;
+    margin-top: 15px;
+}
+
+.content-wrapper button {
+    margin-top: 150px;
+    width: 500px;
+    height: 80px;
+    border-radius: 15px;
+    border: none;
+    color: #FFF;
+    background-color: #48b200;
+    font-size: 30px;
+    font-weight: bold;
+}
