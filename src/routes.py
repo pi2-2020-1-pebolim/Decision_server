@@ -16,9 +16,17 @@ class Route:
 
         self.setup_socketio()
 
-        @self.app.route('/save')
+        @self.app.route('/')
         def main_route():
             return render_template('start-menu.html', image='')
+
+        @self.app.route('/calibration')
+        def calibration():
+            return render_template('calibration.html')
+
+        @self.app.route('/start')
+        def start_game():
+            return render_template('start_game.html')
 
         @self.app.route('/', methods=['POST', 'GET'])
         def render_image():

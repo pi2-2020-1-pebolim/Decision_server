@@ -23,5 +23,5 @@ html, body {
     width: 98%;
     height: calc(100vh - 120px);
     padding: 20px;
-    background-image: radial-gradient(#FFF, #DDD, #AAA);
+    background-image: radial-gradient(#FFF, #DDD, #CCC);
 }

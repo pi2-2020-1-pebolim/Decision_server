@@ -1,0 +1,139 @@
+.calibration-wrapper .header-wrapper {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 30px;
+}
+
+.header-wrapper {
+    height: 600px;
+}
+
+.img-card {
+    width: 50%;
+    height: 50%;
+    margin-right: 15px;
+}
+
+.img-card img {
+    width: 100%;
+    height: 200%;
+}
+
+.scoreboard {
+    width: 50%;
+    background-color: #333;
+}
+
+.scoreboard .timer {
+    display: flex;
+}
+
+.calibration-action {
+    height: calc(100vh - 700px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.calibration-action span {
+    font-size: 25px;
+    font-weight: bold;
+}
+
+#btn-calibration {
+    margin-top: 30px;
+    width: 500px;
+    height: 70px;
+    border-radius: 15px;
+    border: none;
+    color: #FFF;
+    background-color: #48b200;
+    font-size: 30px;
+    font-weight: bold;
+    cursor: pointer; 
+}
+
+.scoreboard {
+    padding: 25px;
+}
+
+.timer {
+    display: flex;
+    justify-content: center;
+}
+
+.title {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.title-scoreboard {
+    color: #FFF;
+    font-size: 35px;
+}
+
+.minute, .seconds {
+    width: 80px;
+    height: 80px;
+    border: 2px solid #9B870C;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;
+    color: #FFF;
+    font-weight: bold;
+    font-size: 50px;
+}
+
+.timer span {
+    font-size: 50px;
+    color: #FFF;
+    display: flex;
+    align-items: center;
+    margin: 0 20px;
+}
+
+.score {
+    display: flex;
+    justify-content: space-between;
+    height: 70%;
+    width: 99%;
+    margin-top: 20px;
+}
+
+.home, .visitor {
+    width: 48%;
+}
+
+.pontuation {
+    width: 30%;
+}
+
+.pontuation span {
+    color: #FFF;
+    font-size: 25px;
+    display: flex;
+}
+
+.pontuation:nth-of-type(2) span {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.home, .visitor {
+    width: 100%;
+    height: 80%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 5px solid #9B870C;
+    margin-top: 10px;
+    border-radius: 20px;
+    font-size: 100px;
+    color: #FFF;
+}
