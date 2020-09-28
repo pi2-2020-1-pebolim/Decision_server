@@ -31,20 +31,30 @@
                 </div>
             </div>
         </div>
-        <div class="start-action">
+        <div id="action-start" class="start-action">
             <button id="minus" class="time-man" onclick="manipulation('minus')">-</button>
             <button id="btn-calibration" onclick="start()">Começar</button>
             <button id="plus" class="time-man" onclick="manipulation('plus')">+</button>
+        </div>
+        <div style="display: none;" id="action-resume" class="start-action" >
+            <button style="margin-right: 15px;" id="pause" onclick="pause()">Pausar</button>
+            <button id="reset" onclick="reset()">Resetar</button>
         </div>
     </div>
 
     <script>
         var minutes = 10;
         var seconds = 00;
+        var isPause = false;
         var secondElem = document.getElementById('seconds');
         var minuteElem = document.getElementById('minutes');
         var minus = document.getElementById('minus');
         var plus = document.getElementById('plus');
+        var resumeAction = document.getElementById('action-resume');
+        var startAction = document.getElementById('action-start');
+        var pauseBtn = document.getElementById('pause');
+        timeoutInst = null;
+        isReset = false;
 
         minuteElem.innerText = minutes;
         secondElem.innerText = '0' + seconds;
@@ -58,10 +68,20 @@
         }
 
         async function start() {
+            if (!isPause) {
+                startAction.style.display = 'none';
+                resumeAction.style.display = 'inline';
+            }
+            isPause = false;
+            pauseBtn.innerHTML = isPause ? 'Continuar' : 'Pausar';
             while (minutes != 0 || seconds != 0) {
-                await timeout(1000);
+                if (isReset) {
+                    break;
+                }
+
+                timeoutInst = await timeout(1000);
                 if(seconds == 0) {
-                    seconds = 60;
+                    seconds = 59;
                     minutes = minutes - 1; 
 
                     minuteElem.innerText = minutes < 10 ? '0' + String(minutes) : minutes;
@@ -75,7 +95,6 @@
         }
 
         function manipulation(action) {
-            console.log('passou')
             if (action == 'plus') { 
                 minutes = minutes + 10 
             } else { 
@@ -92,6 +111,35 @@
                 minus.removeAttribute('disabled');
                 minus.style.opacity = 1;
             }
+        }
+
+        function pause() {
+            if (pauseBtn.innerText === 'Pausar') {
+                clearTimeout(timeout);
+                isReset = true;
+                isPause = true;
+                pauseBtn.innerHTML = isPause ? 'Continuar' : 'Pausar';
+                setTimeout(() => {
+                    isReset = false;
+                }, 2000);
+            } else {
+                start();
+            }
+        }
+
+        function reset() {
+            clearTimeout(timeout);
+            startAction.style.display = 'inline';
+            resumeAction.style.display = 'none';
+            minutes = 10;
+            seconds = 0;
+            isReset = true;
+            minuteElem.innerText = 10;
+            secondElem.innerText = '00';
+
+            setTimeout(() => {
+                isReset = false;
+            }, 1000);
         }
     </script>
 {% endblock %}

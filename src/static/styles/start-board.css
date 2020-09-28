@@ -30,7 +30,7 @@
     font-weight: bold;
 }
 
-#btn-calibration {
+#btn-calibration, #pause, #reset {
     margin-top: 30px;
     width: 500px;
     height: 70px;
