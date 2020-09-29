@@ -28,28 +28,22 @@ class Route:
         def start_game():
             return render_template('start_game.html')
 
-        @self.app.route('/', methods=['POST', 'GET'])
-        def render_image():
+        @self.app.route('/api/status_update', methods=['POST', ])
+        def status_update():
+            
             if request.method == 'POST':
-                self.image = self.image_inst.processingImage(request.form['image'])
-                return self.image
-            else:
-                result = jsonify({
-                    'hello': 'world'
-                })
-                self.socketio.emit('update_image', result)
+                
+                data = loads(request.data)
+                encoded_image = self.image_inst.processingImage(data['camera']['image'])
+                center_pos = self.image_inst.retrieveBallCoordinates(self.image_inst.get_frame(data['camera']['image']))
 
-                return result
+                self.app.logger.info(f"Center: {center_pos[0]}, {center_pos[1]}")
+
+                self.socketio.emit('update_image', {
+                    'image': f"data:image/jpeg;base64,{encoded_image}"
+                })
+
+            return "OK"
 
     def setup_socketio(self):
-      
-        @self.socketio.on('status_update')
-        def get_image_event(json):
-            json = loads(json)
-
-            encoded_image = self.image_inst.processingImage(json['camera']['image'])
-            self.socketio.emit('update_image', {
-                'image': f"data:image/jpeg;base64,{encoded_image}"
-            })
-            # emit('back_resp', json)
-            
+        pass

@@ -9,6 +9,12 @@ class ImageController:
     def __init__(self, app):
         self.app = app
 
+    def get_frame(self, encodedImage):
+        decoded_string = Base64Convertion().decode_base_64(encodedImage)
+        decoded = cv.imdecode(np.frombuffer(decoded_string, np.uint8), -1)
+        
+        return decoded
+
     def processingImage(self, image):
         decoded_string = Base64Convertion().decode_base_64(image)
         decoded = cv.imdecode(np.frombuffer(decoded_string, np.uint8), -1)
