@@ -1,6 +1,7 @@
 from flask import jsonify
 from utils.convert_base64 import Base64Convertion
 import numpy as np
+import imutils
 from PIL import Image
 import cv2 as cv
 import io
