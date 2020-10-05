@@ -15,7 +15,7 @@ socketio = SocketIO(
 routes_inst = Route(app, socketio)
 logging.basicConfig(level=logging.DEBUG)
 
-cors = CORS(app)
+cors = CORS(app, resources={r"*": {"origins": "*"}})
 routes_inst.routes()
 
 if __name__ == '__main__':

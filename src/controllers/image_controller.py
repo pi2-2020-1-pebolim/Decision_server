@@ -16,44 +16,46 @@ class ImageController:
         
         return decoded
 
-    def processingImage(self, image):
+    def calibrateField(self, image):
+        # self.app.logger.info(self.image)
         decoded_string = Base64Convertion().decode_base_64(image)
         decoded = cv.imdecode(np.frombuffer(decoded_string, np.uint8), -1)
         # transform_image = cv.cvtColor(decoded, cv.COLOR_BGR2GRAY)
 
         # Take frame
         frame = decoded
+        frame = imutils.resize(frame, width=600)
+
         # Convert BGR to HSV
         hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
+
         # define range of blue color in HSV
-        low_green = np.array([28, 43, 21])
-        high_green = np.array([102, 255, 255])
+        green_lower = np.array([40, 90, 40], np.uint8) 
+        green_upper = np.array([170, 255, 255], np.uint8) 
+
         # Threshold the HSV image to get only blue colors
-        mask = cv.inRange(hsv, low_green, high_green)
+        mask = cv.inRange(hsv, green_lower, green_upper)
         mask = cv.erode(mask, None, iterations=2)
         mask = cv.dilate(mask, None, iterations=2)
+
         # Bitwise-AND mask and original image
-        res = cv.bitwise_and(frame,frame, mask= mask)
+        # res = cv.bitwise_and(frame,frame, mask= mask)
 
         ret, thresh = cv.threshold(mask, 255, 255, 255)
 
-        contours, hierarchy = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+        contours, hierarchy= cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
 
-        sorted_contours= sorted(contours, key=cv.contourArea, reverse= True)
+        bound_contours = []
+        for contour in contours:
+            bound_contours.append(cv.boundingRect(contour))
 
-        # the two least areas countours in hsv conversion 
-        (x, y, w, h) = cv.boundingRect(sorted_contours[-1])
-        (x2,y2,w2,h2) = cv.boundingRect(sorted_contours[-2])
+        sorted_contours = sorted(bound_contours, key=lambda x: x[0])
+        self.app.logger.info(sorted_contours)
 
-        if x < x2:
-            cv.rectangle(frame, (x - 20, y - 20), (x2 + w2 + 20, y2 + h2 + 20), (255,223,94), 10)
-        else:
-            cv.rectangle(frame, (x2 - 20,y2 -20), (x + w + 20, y + h + 20), (255,223,94), 10)
+        (x, y, _, _) = sorted_contours[0]
+        (x2, y2, w2, h2) = sorted_contours[-1]
 
-        is_success, gray_image_array = cv.imencode('.jpg', frame)
-        gray_image = Image.fromarray(gray_image_array)
-        encoded_gray_image = Base64Convertion().encode_base_64(gray_image.tobytes()).decode('ascii')
-        return encoded_gray_image
+        return (x, y, x2 + w2, y2 + h2)
 
     def retrieveBallCoordinates(self, frame):
         # define the lower and upper boundaries of the "green"
@@ -91,3 +93,21 @@ class ImageController:
             M = cv.moments(c)
             center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
         return center
+
+    def cut_deal_frame(self, image, ROI):
+        decoded_string = Base64Convertion().decode_base_64(image)
+        decoded = cv.imdecode(np.frombuffer(decoded_string, np.uint8), -1)
+
+        # Take frame
+        frame = decoded
+        frame = imutils.resize(frame, width=600)
+        
+        # frame = decoded
+        # frame = imutils.resize(frame, width=600)
+        (x2, y2, w2, h2) = ROI
+        cv.rectangle(frame, (x2, y2), (w2, h2), (255,223,94), 10)
+
+        is_success, gray_image_array = cv.imencode('.jpg', frame)
+        gray_image = Image.fromarray(gray_image_array)
+        encoded_gray_image = Base64Convertion().encode_base_64(gray_image.tobytes()).decode('ascii')
+        return encoded_gray_image

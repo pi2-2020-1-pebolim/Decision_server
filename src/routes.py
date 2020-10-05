@@ -11,6 +11,8 @@ class Route:
         self.socketio = socketio
         self.image_inst = ImageController(self.app)
         self.image = ''
+        self.calibrate = False
+        self.cordinate_calibration = (0, 0, 0, 0)
 
     def routes(self):
 
@@ -28,20 +30,37 @@ class Route:
         def start_game():
             return render_template('start_game.html')
 
-        @self.app.route('/api/status_update', methods=['POST', ])
+
+        @self.app.route('/calibrate', methods=['GET'])
+        def calibrate_screen():
+            try:
+                if not self.calibrate:
+                    self.app.logger.info(self.image)
+                    self.calibrate = True
+                    self.cordinate_calibration = self.image_inst.calibrateField(self.image)
+                    self.app.logger.info('passou')
+                    self.app.logger.info(self.cordinate_calibration)
+                return {}
+            except:
+                return {}
+
+        @self.app.route('/api/status_update', methods=['POST'])
         def status_update():
             
             if request.method == 'POST':
-                
                 data = loads(request.data)
-                encoded_image = self.image_inst.processingImage(data['camera']['image'])
-                center_pos = self.image_inst.retrieveBallCoordinates(self.image_inst.get_frame(data['camera']['image']))
+                self.image = data['camera']['image'] 
 
-                self.app.logger.info(f"Center: {center_pos[0]}, {center_pos[1]}")
+                if self.calibrate:
+                    # center_pos = self.image_inst.retrieveBallCoordinates(self.image_inst.get_frame(data['camera']['image']))
 
-                self.socketio.emit('update_image', {
-                    'image': f"data:image/jpeg;base64,{encoded_image}"
-                })
+                    # self.app.logger.info(f"Center: {center_pos[0]}, {center_pos[1]}")
+
+                    field_image = self.image_inst.cut_deal_frame(self.image, self.cordinate_calibration)
+
+                    self.socketio.emit('update_image', {
+                        'image': f"data:image/jpeg;base64,{field_image}"
+                    })
 
             return "OK"
 
