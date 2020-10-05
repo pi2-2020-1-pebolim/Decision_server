@@ -17,7 +17,6 @@ class ImageController:
         return decoded
 
     def calibrateField(self, image):
-        # self.app.logger.info(self.image)
         decoded_string = Base64Convertion().decode_base_64(image)
         decoded = cv.imdecode(np.frombuffer(decoded_string, np.uint8), -1)
         # transform_image = cv.cvtColor(decoded, cv.COLOR_BGR2GRAY)
@@ -50,12 +49,18 @@ class ImageController:
             bound_contours.append(cv.boundingRect(contour))
 
         sorted_contours = sorted(bound_contours, key=lambda x: x[0])
-        self.app.logger.info(sorted_contours)
 
         (x, y, _, _) = sorted_contours[0]
         (x2, y2, w2, h2) = sorted_contours[-1]
 
-        return (x, y, x2 + w2, y2 + h2)
+        MARGIN_FRAME = 10
+
+        return (
+            x - MARGIN_FRAME, 
+            y - MARGIN_FRAME, 
+            x2 + w2 + MARGIN_FRAME, 
+            y2 + h2 + MARGIN_FRAME
+        )
 
     def retrieveBallCoordinates(self, frame):
         # define the lower and upper boundaries of the "green"
@@ -102,10 +107,8 @@ class ImageController:
         frame = decoded
         frame = imutils.resize(frame, width=600)
         
-        # frame = decoded
-        # frame = imutils.resize(frame, width=600)
-        (x2, y2, w2, h2) = ROI
-        cv.rectangle(frame, (x2, y2), (w2, h2), (255,223,94), 10)
+        (x, y, w, h) = ROI
+        frame = frame[y:h, x:w]
 
         is_success, gray_image_array = cv.imencode('.jpg', frame)
         gray_image = Image.fromarray(gray_image_array)
