@@ -37,7 +37,7 @@ class Route:
                 if not self.calibrate:
                     self.app.logger.info(self.image)
                     self.calibrate = True
-                    self.cordinate_calibration = self.image_inst.calibrateField(self.image)
+                    self.cordinate_calibration = self.image_inst.calibrate_field(self.image)
                     self.app.logger.info('passou')
                     self.app.logger.info(self.cordinate_calibration)
                 return {}

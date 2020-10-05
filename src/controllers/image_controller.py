@@ -16,7 +16,7 @@ class ImageController:
         
         return decoded
 
-    def calibrateField(self, image):
+    def calibrate_field(self, image):
         decoded_string = Base64Convertion().decode_base_64(image)
         decoded = cv.imdecode(np.frombuffer(decoded_string, np.uint8), -1)
         # transform_image = cv.cvtColor(decoded, cv.COLOR_BGR2GRAY)
@@ -99,6 +99,31 @@ class ImageController:
             center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
         return center
 
+
+    def map_players(self, frame):
+        # Convert BGR to HSV
+        hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
+
+         # define range of blue color in HSV
+        blue_lower = np.array([60, 90, 60], np.uint8) 
+        blue_upper = np.array([170, 255, 255], np.uint8) 
+
+        # Threshold the HSV image to get only blue colors
+        mask = cv.inRange(hsv, blue_lower, blue_upper)
+        mask = cv.erode(mask, None, iterations=2)
+        mask = cv.dilate(mask, None, iterations=2)
+
+        ret, thresh = cv.threshold(mask, 255, 255, 255)
+
+        contours, hierarchy= cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+
+        for contour in contours:
+            (x, y, w, h) = cv.boundingRect(contour)
+            cv.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+
+        return frame
+
+
     def cut_deal_frame(self, image, ROI):
         decoded_string = Base64Convertion().decode_base_64(image)
         decoded = cv.imdecode(np.frombuffer(decoded_string, np.uint8), -1)
@@ -109,6 +134,8 @@ class ImageController:
         
         (x, y, w, h) = ROI
         frame = frame[y:h, x:w]
+
+        # frame = self.map_players(frame) # map autonomous players using OpenCV 
 
         is_success, gray_image_array = cv.imencode('.jpg', frame)
         gray_image = Image.fromarray(gray_image_array)
