@@ -7,10 +7,15 @@ import cv2
 import imutils
 import time
 
-# define the lower and upper boundaries of the "green"
+# define the lower and upper boundaries of the "white"
 # ball in the HSV color space
-greenLower = (29, 86, 6)
-greenUpper = (64, 255, 255)
+# 32, 98%, 91% 
+# 232, 126, 5
+# sensitivity = 1
+# whiteLower = np.array([0, 0, 255 - sensitivity], dtype=np.uint8)
+# whiteUpper = np.array([255, sensitivity, 255], dtype=np.uint8)
+whiteLower = np.array([0,0,0], dtype=np.uint8)
+whiteUpper = np.array([0,0,255], dtype=np.uint8)
 
 # initialize the list of tracked points, the frame counter,
 # and the coordinate deltas
@@ -21,7 +26,7 @@ counter = 0
 direction = ""
 
 # read the frame
-frame = cv2.imread('pebolim_teste_bola_verde.jpg', cv2.IMREAD_COLOR)
+frame = cv2.imread('pebolim_teste_bola_branca.jpg', cv2.IMREAD_COLOR)
 
 # resize the frame, blur it, and convert it to the HSV
 # color space
@@ -32,7 +37,7 @@ hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 # construct a mask for the color "green", then perform
 # a series of dilations and erosions to remove any small
 # blobs left in the mask
-mask = cv2.inRange(hsv, greenLower, greenUpper)
+mask = cv2.inRange(hsv, whiteLower, whiteUpper)
 mask = cv2.erode(mask, None, iterations=2)
 mask = cv2.dilate(mask, None, iterations=2)
 
