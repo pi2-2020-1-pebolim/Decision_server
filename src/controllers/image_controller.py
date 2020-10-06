@@ -42,7 +42,7 @@ class ImageController:
 
         ret, thresh = cv.threshold(mask, 255, 255, 255)
 
-        contours, hierarchy= cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+        contours, hierarchy = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
 
         bound_contours = []
         for contour in contours:
@@ -63,22 +63,22 @@ class ImageController:
         )
 
     def retrieveBallCoordinates(self, frame):
-        # define the lower and upper boundaries of the "green"
+        # define the lower and upper boundaries of the "white"
         # ball in the HSV color space
-        # ball RGB color (150, 209, 119)
-        greenLower = (29, 86, 6)
-        greenUpper = (64, 255, 255)
+        # ball RGB color (0, 0, 0)
+        whiteLower = np.array([0,0,0], dtype=np.uint8)
+        whiteUpper = np.array([0,0,255], dtype=np.uint8)
 
         # resize the frame, blur it, and convert it to the HSV
         # color space
-        frame = imutils.resize(frame, width=600)
+        frame = imutils.resize(frame, width = 600)
         blurred = cv.GaussianBlur(frame, (11, 11), 0)
         hsv = cv.cvtColor(blurred, cv.COLOR_BGR2HSV)
 
         # construct a mask for the color "green", then perform
         # a series of dilations and erosions to remove any small
         # blobs left in the mask
-        mask = cv.inRange(hsv, greenLower, greenUpper)
+        mask = cv.inRange(hsv, whiteLower, whiteUpper)
         mask = cv.erode(mask, None, iterations=2)
         mask = cv.dilate(mask, None, iterations=2)
 
@@ -97,7 +97,14 @@ class ImageController:
             ((x, y), radius) = cv.minEnclosingCircle(c)
             M = cv.moments(c)
             center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
-        return center
+            # only proceed if the radius meets a minimum size
+            # ball_minimum_size = 1
+            # if radius > ball_minimum_size:
+                # draw the circle and centroid on the frame,
+                # then update the list of tracked points
+            cv2.circle(frame, (int(x), int(y)), int(radius), (255, 0, 0), 2)
+            cv2.circle(frame, center, 5, (255, 0, 0), -1)
+        return [center, frame]
 
     def cut_deal_frame(self, image, ROI):
         decoded_string = Base64Convertion().decode_base_64(image)
@@ -110,7 +117,9 @@ class ImageController:
         (x, y, w, h) = ROI
         frame = frame[y:h, x:w]
 
-        is_success, gray_image_array = cv.imencode('.jpg', frame)
+        ball = self.retrieveBallCoordinates(frame)
+
+        is_success, gray_image_array = cv.imencode('.jpg', ball[1])
         gray_image = Image.fromarray(gray_image_array)
         encoded_gray_image = Base64Convertion().encode_base_64(gray_image.tobytes()).decode('ascii')
         return encoded_gray_image
