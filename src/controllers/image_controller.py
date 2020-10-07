@@ -66,14 +66,16 @@ class ImageController:
         # define the lower and upper boundaries of the "white"
         # ball in the HSV color space
         # ball RGB color (0, 0, 0)
-        whiteLower = np.array([0,0,0], dtype=np.uint8)
-        whiteUpper = np.array([0,0,255], dtype=np.uint8)
+        # whiteLower = np.array([50,50,50], dtype=np.uint8)
+        # whiteUpper = np.array([255, 150, 255], dtype=np.uint8)
+        whiteLower = np.array([150, 10, 50], dtype=np.uint8)
+        whiteUpper = np.array([255,255,255], dtype=np.uint8)
 
         # resize the frame, blur it, and convert it to the HSV
         # color space
-        frame = imutils.resize(frame, width = 600)
+        # frame = imutils.resize(frame, width = 600)
         blurred = cv.GaussianBlur(frame, (11, 11), 0)
-        hsv = cv.cvtColor(blurred, cv.COLOR_BGR2HSV)
+        hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 
         # construct a mask for the color "green", then perform
         # a series of dilations and erosions to remove any small
@@ -90,7 +92,7 @@ class ImageController:
 
         # only proceed if at least one contour was found
         if len(cnts) > 0:
-            # find the largest contour in the mask, then use
+            # find the largest contour in the mask, then usse
             # it to compute the minimum enclosing circle and
             # centroid
             c = max(cnts, key=cv.contourArea)
@@ -102,8 +104,7 @@ class ImageController:
             # if radius > ball_minimum_size:
                 # draw the circle and centroid on the frame,
                 # then update the list of tracked points
-            cv2.circle(frame, (int(x), int(y)), int(radius), (255, 0, 0), 2)
-            cv2.circle(frame, center, 5, (255, 0, 0), -1)
+            cv.circle(frame, (int(x), int(y)), int(radius), (255, 0, 0), 2)
         return [center, frame]
 
 
@@ -129,7 +130,6 @@ class ImageController:
             cv.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
 
         return frame
-
 
     def cut_deal_frame(self, image, ROI):
         decoded_string = Base64Convertion().decode_base_64(image)
