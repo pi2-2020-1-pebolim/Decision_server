@@ -2,8 +2,8 @@
 from flask import jsonify, render_template, request, make_response, json
 from controllers.image_controller import ImageController
 from flask_socketio import emit, send
-
 from json import loads
+import time
 
 class Route:
     def __init__(self, app, socketio):
@@ -13,6 +13,8 @@ class Route:
         self.image = ''
         self.calibrate = False
         self.cordinate_calibration = (0, 0, 0, 0)
+        self.counter = 100
+        self.execution_times = []
 
     def routes(self):
 
@@ -55,8 +57,18 @@ class Route:
                     # center_pos = self.image_inst.retrieveBallCoordinates(self.image_inst.get_frame(data['camera']['image']))
 
                     # self.app.logger.info(f"Center: {center_pos[0]}, {center_pos[1]}")
-
+                    start_time = time.time()
+        
                     field_image = self.image_inst.cut_deal_frame(self.image, self.cordinate_calibration)
+
+                    if self.counter > 0:
+                        self.execution_times.append(time.time() - start_time)
+                        self.counter -= 1
+
+                    if self.counter == 0:
+                        with open('execution_times.txt', 'w') as f:
+                            for time in self.execution_times:
+                                f.write(f"{time}\n")
 
                     self.socketio.emit('update_image', {
                         'image': f"data:image/jpeg;base64,{field_image}"
