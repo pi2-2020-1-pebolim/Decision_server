@@ -4,6 +4,7 @@ from controllers.image_controller import ImageController
 from flask_socketio import emit, send
 from json import loads
 import time
+from collections import deque
 
 class Route:
     def __init__(self, app, socketio):
@@ -13,8 +14,8 @@ class Route:
         self.image = ''
         self.calibrate = False
         self.cordinate_calibration = (0, 0, 0, 0)
-        self.counter = 100
-        self.execution_times = []
+        self.counter = 0
+        self.execution_times = deque(maxlen = 100)
 
     def routes(self):
 
@@ -57,19 +58,23 @@ class Route:
                     # center_pos = self.image_inst.retrieveBallCoordinates(self.image_inst.get_frame(data['camera']['image']))
 
                     # self.app.logger.info(f"Center: {center_pos[0]}, {center_pos[1]}")
+                    
                     start_time = time.time()
+                    self.counter += 1
         
                     field_image = self.image_inst.cut_deal_frame(self.image, self.cordinate_calibration)
 
-                    if self.counter > 0:
-                        self.execution_times.append(time.time() - start_time)
-                        self.counter -= 1
+                    self.execution_times.append(time.time() - start_time)
 
-                    if self.counter == 0:
-                        with open('execution_times.txt', 'w') as f:
-                            for time in self.execution_times:
-                                f.write(f"{time}\n")
+                    self.app.logger.info(f"Medições: {self.counter}")
 
+                    if self.counter % 250 == 0:
+                        file_name = f"{time.strftime('%Y%m%d_%H%M%S')}.txt"
+                        file = open(file_name, 'a+')
+                        for execution_time in self.execution_times:
+                            file.write(f"{execution_time}\n")
+                        file.close()
+                    
                     self.socketio.emit('update_image', {
                         'image': f"data:image/jpeg;base64,{field_image}"
                     })
