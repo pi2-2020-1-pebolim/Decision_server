@@ -16,9 +16,6 @@ class Route:
         self.cordinate_calibration = (0, 0, 0, 0)
 
     def routes(self):
-
-        self.setup_socketio()
-
         @self.app.route('/')
         def main_route():
             return render_template('start-menu.html', image='')
