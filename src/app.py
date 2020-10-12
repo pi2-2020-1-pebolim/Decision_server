@@ -11,7 +11,7 @@ socketio = SocketIO(
     cors_allowed_origins="*",
     max_queue=None,
     max_size=None
-)   
+)
 routes_inst = Route(app, socketio)
 logging.basicConfig(level=logging.DEBUG)
 
