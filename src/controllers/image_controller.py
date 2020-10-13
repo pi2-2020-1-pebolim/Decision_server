@@ -1,4 +1,5 @@
 from utils.convert_base64 import Base64Convertion
+from sklearn.linear_model import LinearRegression
 from collections import deque
 from flask import jsonify
 from PIL import Image
@@ -13,6 +14,7 @@ class ImageController:
     def __init__(self, app):
         self.deque_memory = deque(maxlen=10)
         self.app = app
+        self.regression = LinearRegression()
 
     def get_frame(self, encodedImage):
         decoded_string = Base64Convertion().decode_base_64(encodedImage)
@@ -71,8 +73,6 @@ class ImageController:
         # define the lower and upper boundaries of the "white"
         # ball in the HSV color space
         # ball RGB color (0, 0, 0)
-        # whiteLower = np.array([50,50,50], dtype=np.uint8)
-        # whiteUpper = np.array([255, 150, 255], dtype=np.uint8)
         white_lower = np.array([150, 10, 50], dtype=np.uint8)
         white_upper = np.array([255, 255, 255], dtype=np.uint8)
 
@@ -107,6 +107,7 @@ class ImageController:
             M = cv.moments(max_contour)
             center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
             self.deque_memory.appendleft(center)
+
             # only proceed if the radius meets a minimum size
             # ball_minimum_size = 1
             # if radius > ball_minimum_size:
@@ -139,6 +140,19 @@ class ImageController:
 
         return frame
 
+    def estimate_positions(self, frame):
+        if len(self.deque_memory) == 10:
+            x_positions, y_positions = zip(*self.deque_memory)
+            regression = self.regression.fit(
+                np.array(x_positions).reshape(-1, 1), np.array(y_positions)
+            )
+            start_point = regression.coef_[0] * 0 + regression.intercept_
+            end_point = regression.coef_[0] * 600 + regression.intercept_
+            
+            frame = cv.line(frame, (0, int(start_point)), (600, int(end_point)), (0, 50, 255), 3) 
+            
+            return frame
+
     def cut_deal_frame(self, image, ROI):
         decoded_string = Base64Convertion().decode_base_64(image)
         decoded = cv.imdecode(np.frombuffer(decoded_string, np.uint8), -1)
@@ -151,8 +165,9 @@ class ImageController:
         frame = frame[y:h, x:w]
 
         ball = self.retrieveBallCoordinates(frame)
+        frame = self.estimate_positions(ball[1])
 
-        is_success, gray_image_array = cv.imencode('.jpg', ball[1])
+        is_success, gray_image_array = cv.imencode('.jpg', frame)
         gray_image = Image.fromarray(gray_image_array)
         encoded_gray_image = Base64Convertion().encode_base_64(
             gray_image.tobytes()).decode('ascii')
