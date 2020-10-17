@@ -15,6 +15,7 @@ class ImageController:
         self.deque_memory = deque(maxlen=10)
         self.app = app
         self.regression = LinearRegression()
+        self.position_x_rods = []
 
     def get_frame(self, encodedImage):
         decoded_string = Base64Convertion().decode_base_64(encodedImage)
@@ -49,7 +50,8 @@ class ImageController:
         ret, thresh = cv.threshold(mask, 255, 255, 255)
 
         contours, hierarchy = cv.findContours(
-            mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+            mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE
+        )
 
         bound_contours = []
         for contour in contours:
@@ -62,6 +64,8 @@ class ImageController:
 
         MARGIN_FRAME = 10
 
+        self.map_rods_cpu_position(frame)
+
         return (
             x - MARGIN_FRAME,
             y - MARGIN_FRAME,
@@ -69,7 +73,7 @@ class ImageController:
             y2 + h2 + MARGIN_FRAME
         )
 
-    def retrieveBallCoordinates(self, frame):
+    def retrieve_ball_coordinates(self, frame):
         # define the lower and upper boundaries of the "white"
         # ball in the HSV color space
         # ball RGB color (0, 0, 0)
@@ -116,7 +120,7 @@ class ImageController:
             cv.circle(frame, (int(x), int(y)), int(radius), (255, 0, 0), 2)
         return [center, frame]
 
-    def map_players(self, frame):
+    def map_rods_cpu_position(self, frame):
         # Convert BGR to HSV
         hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 
@@ -132,13 +136,17 @@ class ImageController:
         ret, thresh = cv.threshold(mask, 255, 255, 255)
 
         contours, hierarchy = cv.findContours(
-            mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+            mask, 
+            cv.RETR_EXTERNAL, 
+            cv.CHAIN_APPROX_SIMPLE
+        )
 
         for contour in contours:
             (x, y, w, h) = cv.boundingRect(contour)
             cv.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+            self.position_x_rods.append(x)
 
-        return frame
+        self.position_x_rods = list(set(self.position_x_rods))
 
     def estimate_positions(self, frame):
         if len(self.deque_memory) == 10:
@@ -149,8 +157,17 @@ class ImageController:
             start_point = regression.coef_[0] * 0 + regression.intercept_
             end_point = regression.coef_[0] * 600 + regression.intercept_
             
-            frame = cv.line(frame, (0, int(start_point)), (600, int(end_point)), (0, 50, 255), 3) 
-            
+            COLOR_LINE = (0, 50, 255)
+            THICKNESS = 3
+
+            frame = cv.line(
+                frame, 
+                (0, int(start_point)),
+                (600, int(end_point)), 
+                COLOR_LINE, 
+                THICKNESS
+            )
+
             return frame
 
     def cut_deal_frame(self, image, ROI):
@@ -164,7 +181,7 @@ class ImageController:
         (x, y, w, h) = ROI
         frame = frame[y:h, x:w]
 
-        ball = self.retrieveBallCoordinates(frame)
+        ball = self.retrieve_ball_coordinates(frame)
         frame = self.estimate_positions(ball[1])
 
         is_success, gray_image_array = cv.imencode('.jpg', frame)
