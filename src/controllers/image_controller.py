@@ -167,16 +167,27 @@ class ImageController:
             regression = self.regression.fit(
                 np.array(x_positions).reshape(-1, 1), np.array(y_positions)
             )
-            start_point = regression.coef_[0] * 0 + regression.intercept_
-            end_point = regression.coef_[0] * 600 + regression.intercept_
+
+            start_point_x = x_positions[0]
+            end_point_x = x_positions[0]
+
+            if x_positions[-1] - x_positions[0] < 0:
+                start_point_x = x_positions[0]
+                end_point_x = 600
+            elif x_positions[-1] - x_positions[0] > 0:
+                start_point_x = x_positions[0]
+                end_point_x = 0
+
+            start_point_y = regression.coef_[0] * start_point_x + regression.intercept_
+            end_point_y = regression.coef_[0] * end_point_x + regression.intercept_
             
             COLOR_LINE = (0, 50, 255)
             THICKNESS = 3
 
             frame = cv.line(
                 frame, 
-                (0, int(start_point)),
-                (600, int(end_point)), 
+                (int(start_point_x), int(start_point_y)),
+                (int(end_point_x), int(end_point_y)), 
                 COLOR_LINE, 
                 THICKNESS
             )
