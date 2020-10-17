@@ -120,13 +120,22 @@ class ImageController:
             cv.circle(frame, (int(x), int(y)), int(radius), (255, 0, 0), 2)
         return [center, frame]
 
+    def verify_next_positions(self, list_positions):
+        new_list_positions = list_positions.copy()
+        for position in range(len(list_positions)):
+            if position is not 0:
+              if list_positions[position] - list_positions[position - 1] < 5:
+                new_list_positions.remove(list_positions[position])
+
+        return new_list_positions
+
     def map_rods_cpu_position(self, frame):
         # Convert BGR to HSV
         hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 
         # define range of blue color in HSV
-        blue_lower = np.array([60, 90, 60], np.uint8)
-        blue_upper = np.array([170, 255, 255], np.uint8)
+        blue_lower = np.array([70,150,150], np.uint8)
+        blue_upper = np.array([140,255,255], np.uint8)
 
         # Threshold the HSV image to get only blue colors
         mask = cv.inRange(hsv, blue_lower, blue_upper)
@@ -141,12 +150,16 @@ class ImageController:
             cv.CHAIN_APPROX_SIMPLE
         )
 
+        self.position_x_rods = []
         for contour in contours:
             (x, y, w, h) = cv.boundingRect(contour)
             cv.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
-            self.position_x_rods.append(x)
+            self.position_x_rods.append(x + (w // 2))
 
         self.position_x_rods = list(set(self.position_x_rods))
+        self.position_x_rods.sort()
+
+        self.position_x_rods = self.verify_next_positions(self.position_x_rods)
 
     def estimate_positions(self, frame):
         if len(self.deque_memory) == 10:
