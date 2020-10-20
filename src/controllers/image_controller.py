@@ -16,6 +16,9 @@ class ImageController:
         self.app = app
         self.regression = LinearRegression()
         self.position_x_rods = []
+        self.direction = 'no_move'
+        self.position_ball = None
+        self.count_send_decision = 0
 
     def get_frame(self, encodedImage):
         decoded_string = Base64Convertion().decode_base_64(encodedImage)
@@ -99,6 +102,7 @@ class ImageController:
             mask.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE
         )
         contours = imutils.grab_contours(contours)
+        self.position_ball = None
         center = None
 
         # only proceed if at least one contour was found
@@ -110,6 +114,7 @@ class ImageController:
             ((x, y), radius) = cv.minEnclosingCircle(max_contour)
             M = cv.moments(max_contour)
             center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+            self.position_ball = center
             self.deque_memory.appendleft(center)
 
             # only proceed if the radius meets a minimum size
@@ -164,22 +169,25 @@ class ImageController:
     def estimate_positions(self, frame):
         if len(self.deque_memory) == 10:
             x_positions, y_positions = zip(*self.deque_memory)
-            regression = self.regression.fit(
+            self.regression.fit(
                 np.array(x_positions).reshape(-1, 1), np.array(y_positions)
             )
 
             start_point_x = x_positions[0]
             end_point_x = x_positions[0]
+            self.direction = 'no_move'
 
             if x_positions[-1] - x_positions[0] < 0:
                 start_point_x = x_positions[0]
                 end_point_x = 600
+                self.direction = 'right'
             elif x_positions[-1] - x_positions[0] > 0:
                 start_point_x = x_positions[0]
                 end_point_x = 0
+                self.direction = 'left'
 
-            start_point_y = regression.coef_[0] * start_point_x + regression.intercept_
-            end_point_y = regression.coef_[0] * end_point_x + regression.intercept_
+            start_point_y = self.regression.coef_[0] * start_point_x + self.regression.intercept_
+            end_point_y = self.regression.coef_[0] * end_point_x + self.regression.intercept_
             
             COLOR_LINE = (0, 50, 255)
             THICKNESS = 3
@@ -193,6 +201,22 @@ class ImageController:
             )
 
             return frame
+
+    def define_action(self):
+        DECISION_THRESHOLD = 3
+        
+        self.count_send_decision = +self.count_send_decision
+
+        if self.direction == 'left' and self.count_send_decision == DECISION_THRESHOLD:
+            decision = {}
+            
+            for rod_position in self.position_x_rods:
+                if self.position_ball is not None and rod_position < self.position_ball[0]:
+                    y_regr_position_rod = self.regression.coef_[0] * rod_position + self.regression.intercept_
+
+            self.count_send_decision = 0
+            return decision
+
 
     def cut_deal_frame(self, image, ROI):
         decoded_string = Base64Convertion().decode_base_64(image)
