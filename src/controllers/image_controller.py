@@ -142,7 +142,7 @@ class ImageController:
     def verify_next_positions(self, list_positions):
         new_list_positions = list_positions.copy()
         for position in range(len(list_positions)):
-            if position is not 0:
+            if position != 0:
               if list_positions[position] - list_positions[position - 1] < 5:
                 new_list_positions.remove(list_positions[position])
 
