@@ -20,6 +20,19 @@ class ImageController:
         self.position_ball = None
         self.count_send_decision = 0
 
+
+    def register_event(self, event):
+        self.app.logger.info(event)
+        real_dimension_field = event['fieldDefinition']['dimensions']
+        self.app.logger.info(real_dimension_field)
+
+        for lane in event['fieldDefinition']['lanes']:
+            resize_measure = (600 * lane['xPosition']) // (real_dimension_field[0] + 65)
+            self.position_x_rods.append(resize_measure)
+
+        # self.app.logger.info(self.position_x_rods)
+        # pass
+
     def get_frame(self, encodedImage):
         decoded_string = Base64Convertion().decode_base_64(encodedImage)
         decoded = cv.imdecode(np.frombuffer(decoded_string, np.uint8), -1)
@@ -67,7 +80,8 @@ class ImageController:
 
         MARGIN_FRAME = 10
 
-        self.map_rods_cpu_position(frame)
+        # self.map_rods_cpu_position(frame)
+        self.app.logger.info(self.position_x_rods)
 
         return (
             x - MARGIN_FRAME,
@@ -165,11 +179,12 @@ class ImageController:
         self.position_x_rods.sort()
 
         self.position_x_rods = self.verify_next_positions(self.position_x_rods)
+        self.app.logger.info(self.position_x_rods)
 
     def estimate_positions(self, frame):
         if len(self.deque_memory) == 10:
             x_positions, y_positions = zip(*self.deque_memory)
-            self.regression.fit(
+            self.regression.fit(    
                 np.array(x_positions).reshape(-1, 1), np.array(y_positions)
             )
 
@@ -208,8 +223,11 @@ class ImageController:
         self.count_send_decision = +self.count_send_decision
 
         if self.direction == 'left' and self.count_send_decision == DECISION_THRESHOLD:
-            decision = {}
-            
+            decision = {
+                "evenType": "action",
+                "desiredState": []
+            }
+
             for rod_position in self.position_x_rods:
                 if self.position_ball is not None and rod_position < self.position_ball[0]:
                     y_regr_position_rod = self.regression.coef_[0] * rod_position + self.regression.intercept_
@@ -231,6 +249,20 @@ class ImageController:
 
         ball = self.retrieve_ball_coordinates(frame)
         frame = self.estimate_positions(ball[1])
+
+        COLOR_LINE = (0, 50, 255)
+        THICKNESS = 3
+
+        for i in self.position_x_rods:
+            frame = cv.line(
+                frame, 
+                (int(i), int(0)),
+                (int(i), int(300)), 
+                COLOR_LINE, 
+                THICKNESS
+            )
+
+        # self.map_rods_cpu_position(frame)
 
         is_success, gray_image_array = cv.imencode('.jpg', frame)
         gray_image = Image.fromarray(gray_image_array)

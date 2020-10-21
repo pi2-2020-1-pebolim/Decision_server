@@ -62,3 +62,10 @@ class Route:
                     })
 
             return "OK"
+
+        @self.app.route('/api/register', methods=['POST'])
+        def register_event():
+            data = loads(request.data)
+            self.image_inst.register_event(data)
+
+            return "OK"
