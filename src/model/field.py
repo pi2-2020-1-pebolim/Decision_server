@@ -6,16 +6,19 @@ class Field:
         super().__init__()
         self.height = 0
         self.width = 0
+        self.lanes_x_positions = []
         self.players = []
 
     def set_field_dimensions(self, dimensions):
         [self.width, self.height] = dimensions
 
-    def set_position_players(self, lanes):
+    def set_lanes_players_positions(self, lanes):
+        lanes_x_positions = []
         players = []
         lane_center_y_position = self.height / 2
         
         for lane in lanes:
+            lanes_x_positions.append(lane['xPosition'])
             lane_players = []
 
             for player_index in range(lane['playerCount']):
@@ -37,5 +40,6 @@ class Field:
 
             players.extend(lane_players)
         
+        self.lanes_x_positions = lanes_x_positions
         self.players = players
       
