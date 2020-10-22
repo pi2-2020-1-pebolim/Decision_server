@@ -7,12 +7,16 @@
 {% endblock %}
 
 {% block content %}
+    <div class="navbar">
+        <span>Calibrar Mesa</span>
+    </div>
     <div class="calibration-wrapper">
         <div class="header-wrapper">
+            <span>Coloque a bola de pebolim no círculo vermelho</span>
             <div class="img-card">
-                <img id="img-field" src="/static/img/field_1.png" alt="field">
+                <img id="img-field" src="/static/img/field1.png" alt="field">
             </div>
-            <div class="scoreboard">
+            <!-- <div class="scoreboard">
                 <div class="title">
                     <span class="title-scoreboard">Placar</span>
                 </div>
@@ -35,11 +39,10 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> -->
         </div>
         <div class="calibration-action">
-            <span>Coloque a bola de pebolim onde o círculo vermelho aponta, e clique em prosseguir!</span>
-            <button id="btn-calibration" onclick="changeStep()">Prosseguir</button>
+            <button id="btn-calibration" onclick="changeStep()">Continuar</button>
         </div>
     </div>
 
@@ -54,7 +57,7 @@
 
             if (step_img < 6) {
                 var image_field = document.getElementById('img-field');
-                image_field.src = `/static/img/field_${step_img++}.png`;
+                image_field.src = `/static/img/field${step_img++}.png`;
             } else {
                 $.ajax({
                     type: "GET",
@@ -63,7 +66,7 @@
                     dataType: 'json'
                 });
                 
-                window.location.replace("/start");
+                window.location.replace("/difficulty");
             }
         }
     </script>
