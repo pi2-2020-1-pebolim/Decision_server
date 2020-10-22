@@ -1,5 +1,5 @@
-
-from flask import jsonify, render_template, request, make_response, json
+import os
+from flask import jsonify, render_template, request, make_response, json, send_from_directory
 from controllers.image_controller import ImageController
 from flask_socketio import emit, send
 
@@ -16,6 +16,11 @@ class Route:
         self.cordinate_calibration = (0, 0, 0, 0)
 
     def routes(self):
+        @self.app.route('/favicon.ico')
+        def favicon():
+            return send_from_directory(os.path.join(self.app.root_path, 'static/img'),
+                                    'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
         @self.app.route('/')
         def main_route():
             return render_template('start-menu.html', image='')
