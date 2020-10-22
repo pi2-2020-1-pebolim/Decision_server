@@ -24,6 +24,14 @@ class Route:
         def calibration():
             return render_template('calibration.html')
 
+        @self.app.route('/difficulty')
+        def difficulty():
+            return render_template('difficulty.html')
+
+        @self.app.route('/time')
+        def time():
+            return render_template('time.html')
+
         @self.app.route('/start')
         def start_game():
             return render_template('start_game.html')
