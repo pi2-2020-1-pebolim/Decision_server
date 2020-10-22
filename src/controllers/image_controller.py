@@ -23,11 +23,12 @@ class ImageController:
         self.rods_info = []
         self.half_field_size = 0
         self.field = Field()
-
+        self.image_width = 0
+        self.image_height = 0
 
     def register_event(self, event):
         self.field.set_field_dimensions(event['fieldDefinition']['dimensions'])
-        self.field.set_position_players(event['fieldDefinition']['lanes'])
+        self.field.set_lanes_players_positions(event['fieldDefinition']['lanes'])
 
         # self.half_field_size = height_real_field // 2
         
@@ -100,12 +101,15 @@ class ImageController:
         # self.map_rods_cpu_position(frame)
         self.app.logger.info(self.position_x_rods)
 
-        return (
-            x - MARGIN_FRAME,
-            y - MARGIN_FRAME,
-            x2 + w2 + MARGIN_FRAME,
-            y2 + h2 + MARGIN_FRAME
-        )
+        x_position = x - MARGIN_FRAME
+        y_position = y - MARGIN_FRAME
+        width = x2 + w2 + MARGIN_FRAME
+        height = y2 + h2 + MARGIN_FRAME
+
+        self.image_width = width
+        self.image_height = height
+
+        return (x_position, y_position, width, height)       
 
     def retrieve_ball_coordinates(self, frame):
         # define the lower and upper boundaries of the "white"
@@ -199,8 +203,10 @@ class ImageController:
         self.app.logger.info(self.position_x_rods)
 
     def estimate_positions(self, frame):
+        
         if len(self.deque_memory) == 10:
             x_positions, y_positions = zip(*self.deque_memory)
+            
             self.regression.fit(    
                 np.array(x_positions).reshape(-1, 1), np.array(y_positions)
             )
@@ -245,9 +251,28 @@ class ImageController:
                 "desiredState": []
             }
 
-            for rod_position in self.position_x_rods:
-                if self.position_ball is not None and rod_position < self.position_ball[0]:
-                    y_regr_position_rod = self.regression.coef_[0] * rod_position + self.regression.intercept_
+            lanes_y_interception = self.regression.predict(self.field.lanes_x_positions)
+
+            for lane_index, lane_y_interception in enumerate(lanes_y_interception):
+                for player in self.field.players:
+                    y_max_position = player.get_y_max_positions()
+                    y_min_position = player.get_y_min_positions()
+                    if player['laneID'] == lane_index and lane_y_interception >= y_min_position and lane_y_interception <= y_max_position:
+                        laneID = lane_index
+                        position = lane_y_interception - self.field.height / 2
+                        kick = False
+                        break
+                    else:
+                        pass
+                desiredState = {
+                    "laneID": laneID,
+                    "position": position,
+                    "kick": kick,
+                }
+
+            # for rod_position in self.position_x_rods:
+            #     if self.position_ball is not None and rod_position < self.position_ball[0]:
+            #        y_regr_position_rod = self.regression.coef_[0] * rod_position + self.regression.intercept_
 
             self.count_send_decision = 0
             return decision
