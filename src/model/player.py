@@ -16,7 +16,10 @@ class Player:
         self.yMaxPosition = self.yCenterPosition + movementLimit
         self.yMinPosition = self.yCenterPosition - movementLimit
 
-    def get_y_max_min_positions(self):
-        return [self.yMaxPosition, self.yMinPosition]
+    def get_y_max_positions(self):
+        return self.yMaxPosition
+    
+    def get_y_min_positions(self):
+        return self.yMinPosition
  
     
