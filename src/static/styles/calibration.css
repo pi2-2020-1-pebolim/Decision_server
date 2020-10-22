@@ -1,22 +1,39 @@
-.calibration-wrapper .header-wrapper {
+.calibration-wrapper {
+    width: 100%;
+    height: 100%;
     display: flex;
-    justify-content: space-between;
-    padding: 0 30px;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
 }
 
-.header-wrapper {
-    height: 600px;
+.calibration-wrapper span {
+    position: absolute;
+    width: 627px;
+    height: 55px;
+    left: 224px;
+    top: 143px;
+
+    font-family: Black Ops One;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 24px;
+    line-height: 30px;
+
+    color: #000000;
 }
 
 .img-card {
-    width: 50%;
-    height: 50%;
-    margin-right: 15px;
+    position: absolute;
+    width: 652px;
+    height: 424px;
+    left: 199px;
+    top: 216px;
 }
 
 .img-card img {
     width: 100%;
-    height: 200%;
+    height: 100%;
 }
 
 .scoreboard {
@@ -41,7 +58,7 @@
     font-weight: bold;
 }
 
-#btn-calibration {
+/* #btn-calibration {
     margin-top: 30px;
     width: 500px;
     height: 70px;
@@ -52,7 +69,7 @@
     font-size: 30px;
     font-weight: bold;
     cursor: pointer; 
-}
+} */
 
 .scoreboard {
     padding: 25px;
