@@ -47,6 +47,7 @@ class Route:
 
             if request.method == 'POST':
                 data = loads(request.data)
+                # self.app.logger.info(data["lanes"])
                 self.image = data['camera']['image']
 
                 if self.calibrate:
@@ -55,7 +56,8 @@ class Route:
                     # self.app.logger.info(f"Center: {center_pos[0]}, {center_pos[1]}")
 
                     field_image = self.image_inst.cut_deal_frame(
-                        self.image, self.cordinate_calibration)
+                        self.image, self.cordinate_calibration
+                    )
 
                     self.socketio.emit('update_image', {
                         'image': f"data:image/jpeg;base64,{field_image}"

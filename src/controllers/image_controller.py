@@ -9,6 +9,7 @@ import imutils
 import cv2 as cv
 import io
 
+from model.field import Field
 
 class ImageController:
     def __init__(self, app):
@@ -19,16 +20,32 @@ class ImageController:
         self.direction = 'no_move'
         self.position_ball = None
         self.count_send_decision = 0
+        self.rods_info = []
+        self.half_field_size = 0
+        self.field = Field()
 
 
     def register_event(self, event):
-        self.app.logger.info(event)
-        real_dimension_field = event['fieldDefinition']['dimensions']
-        self.app.logger.info(real_dimension_field)
+        self.field.set_field_dimensions(event['fieldDefinition']['dimensions'])
+        self.field.set_position_players(event['fieldDefinition']['lanes'])
 
-        for lane in event['fieldDefinition']['lanes']:
-            resize_measure = (600 * lane['xPosition']) // (real_dimension_field[0] + 65)
-            self.position_x_rods.append(resize_measure)
+        # self.half_field_size = height_real_field // 2
+        
+        # for lane in event['fieldDefinition']['lanes']:
+        #     rod_info = {}
+
+        #     resize_pos_x_lane = (600 * lane['xPosition']) // (width_real_field + 65)
+        #     self.position_x_rods.append(resize_pos_x_lane)
+        #     resize_play_distance = (270 * lane['playerDistance']) // (height_real_field + 65)
+        #     resize_movement_limit = (270 * lane['movementLimit']) // (height_real_field + 65)
+        #     self.rods_info.append({
+        #         'laneID': lane['laneID'],
+        #         'movementLimit': resize_movement_limit,
+        #         'playerDistance': resize_play_distance,
+        #         'playerCount': lane['playerCount']
+        #     })
+
+        # self.app.logger.info(self.rods_info)
 
         # self.app.logger.info(self.position_x_rods)
         # pass
@@ -78,7 +95,7 @@ class ImageController:
         (x, y, _, _) = sorted_contours[0]
         (x2, y2, w2, h2) = sorted_contours[-1]
 
-        MARGIN_FRAME = 10
+        MARGIN_FRAME = 25
 
         # self.map_rods_cpu_position(frame)
         self.app.logger.info(self.position_x_rods)
