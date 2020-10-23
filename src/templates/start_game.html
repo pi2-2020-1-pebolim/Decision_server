@@ -2,144 +2,63 @@
 
 {% block head %}
     {{ super() }}
-    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/start-board.css') }}">
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/start-game.css') }}">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="text/javascript" src="{{url_for('static',filename='js/timer.js') }}"></script>
+
 {% endblock %}
 
 {% block content %}
-    <div class="start-wrapper">
-        <div class="scoreboard">
-            <div class="title">
-                <span class="title-scoreboard">Placar</span>
-            </div>
-            <div class="timer">
-                <div id="minutes" class="minute">00</div>
-                <span>:</span>
-                <div id="seconds" class="seconds">00</div>
-            </div>
-            <div class="score">
-                <div class="pontuation">
-                    <span>Casa</span>
-                    <div class="home">
-                        00
-                    </div>
-                </div>
-                <div class="pontuation">
-                    <span>Visitante</span>
-                    <div class="visitor">
-                        00
-                    </div>
-                </div>
-            </div>
+
+    <div class="navbar">
+        <span>Placar</span>
+    </div>
+    <div class="time-wrapper">
+        <div id="app">
+          <div class="base-timer">
+            <svg class="base-timer__svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <g class="base-timer__circle">
+                <circle class="base-timer__path-elapsed" cx="50" cy="50" r="45"></circle>
+                <path
+                  id="base-timer-path-remaining"
+                  stroke-dasharray="283"
+                  class="base-timer__path-remaining ${remainingPathColor}"
+                  d="
+                    M 50, 50
+                    m -45, 0
+                    a 45,45 0 1,0 90,0
+                    a 45,45 0 1,0 -90,0
+                  "
+                ></path>
+              </g>
+            </svg>
+            <span id="base-timer-label" class="base-timer__label"></span>
+          </div>
         </div>
-        <div id="action-start" class="start-action">
-            <button id="minus" class="time-man" onclick="manipulation('minus')">-</button>
-            <button id="btn-calibration" onclick="start()">Começar</button>
-            <button id="plus" class="time-man" onclick="manipulation('plus')">+</button>
-        </div>
-        <div style="display: none;" id="action-resume" class="start-action" >
-            <button style="margin-right: 15px;" id="pause" onclick="pause()">Pausar</button>
-            <button id="reset" onclick="reset()">Resetar</button>
-        </div>
+      <div>
+          <button class="btn-reset" onclick="reset()">Resetar</button>
+      </div>
+      <div>
+          <button class="btn-start" onclick="start()">Começar</button>
+      </div>
+      <div>
+          <button class="btn-pause" onclick="pause()">Pausar</button>
+      </div>
+      <span>Coloque a bola de pebolim no círculo vermelho</span>
     </div>
 
     <script>
-        var minutes = 10;
-        var seconds = 00;
-        var isPause = false;
-        var secondElem = document.getElementById('seconds');
-        var minuteElem = document.getElementById('minutes');
-        var minus = document.getElementById('minus');
-        var plus = document.getElementById('plus');
-        var resumeAction = document.getElementById('action-resume');
-        var startAction = document.getElementById('action-start');
-        var pauseBtn = document.getElementById('pause');
-        timeoutInst = null;
-        isReset = false;
-
-        minuteElem.innerText = minutes;
-        secondElem.innerText = '0' + seconds;
-        if (minutes === 10) {
-            minus.setAttribute('disabled', true);
-            minus.style.opacity = 0.6;
+        
+        function reset() {
+          window.location.replace("/start");
         }
 
-        function timeout(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
-
-        async function start() {
-            if (!isPause) {
-                startAction.style.display = 'none';
-                resumeAction.style.display = 'inline';
-            }
-            isPause = false;
-            pauseBtn.innerHTML = isPause ? 'Continuar' : 'Pausar';
-            while (minutes != 0 || seconds != 0) {
-                if (isReset) {
-                    break;
-                }
-
-                timeoutInst = await timeout(1000);
-                if(seconds == 0) {
-                    seconds = 59;
-                    minutes = minutes - 1; 
-
-                    minuteElem.innerText = minutes < 10 ? '0' + String(minutes) : minutes;
-                    secondElem.innerText = seconds < 10 ? '0' + String(seconds) : seconds;
-                } else {
-                    seconds = seconds - 1;
-
-                    secondElem.innerText = seconds < 10 ? '0' + String(seconds) : seconds;
-                }
-            }
-        }
-
-        function manipulation(action) {
-            if (action == 'plus') { 
-                minutes = minutes + 10 
-            } else { 
-                minutes = minutes - 10 
-            }
-
-            minuteElem.innerText = minutes;
-            minus.disabled = minutes == 10 ? true : false;
-            
-            if (minutes === 10) {
-                minus.setAttribute('disabled', true);
-                minus.style.opacity = 0.6;
-            } else {
-                minus.removeAttribute('disabled');
-                minus.style.opacity = 1;
-            }
+        function start() {
+          window.location.replace("/start");
         }
 
         function pause() {
-            if (pauseBtn.innerText === 'Pausar') {
-                clearTimeout(timeout);
-                isReset = true;
-                isPause = true;
-                pauseBtn.innerHTML = isPause ? 'Continuar' : 'Pausar';
-                setTimeout(() => {
-                    isReset = false;
-                }, 2000);
-            } else {
-                start();
-            }
-        }
-
-        function reset() {
-            clearTimeout(timeout);
-            startAction.style.display = 'inline';
-            resumeAction.style.display = 'none';
-            minutes = 10;
-            seconds = 0;
-            isReset = true;
-            minuteElem.innerText = 10;
-            secondElem.innerText = '00';
-
-            setTimeout(() => {
-                isReset = false;
-            }, 1000);
+          window.location.replace("/start");
         }
     </script>
 {% endblock %}
