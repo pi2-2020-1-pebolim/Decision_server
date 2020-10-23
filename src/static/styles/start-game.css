@@ -100,3 +100,39 @@ body {
   justify-content: center;
   font-size: 40px;
 }
+
+.player {
+  position: absolute;
+  width: 241px;
+  height: 60px;
+  left: 105px;
+  top: 215px;
+
+  font-family: Black Ops One;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 48px;
+  line-height: 60px;
+  /* identical to box height */
+
+
+  color: #000AFF;
+}
+
+.machine {
+  position: absolute;
+  width: 240px;
+  height: 60px;
+  left: 674px;
+  top: 215px;
+
+  font-family: Black Ops One;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 48px;
+  line-height: 60px;
+  /* identical to box height */
+
+
+  color: #FF0000;
+}
