@@ -4,62 +4,119 @@
     {{ super() }}
     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/time.css') }}">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!--[if lt IE 9]>
+        <script type="text/javascript" {{url_for('static',filename='js/excanvas.js') }}"></script>
+    <![endif]-->
+
+    <script type="text/javascript" src="{{url_for('static',filename='js/segment-display.js') }}"></script>
+    <script type="text/javascript">
+
+        var display = new SegmentDisplay("display");
+        display.pattern         = "##:##:##";
+        display.value           = '00:00:00';
+        display.displayAngle    = 0.5;
+        display.digitHeight     = 23;
+        display.digitWidth      = 13;
+        display.digitDistance   = 2.5;
+        display.segmentWidth    = 2.5;
+        display.segmentDistance = 0.3;
+        display.segmentCount    = 7;
+        display.cornerType      = 3;
+        display.colorOn         = "#ff1b0f";
+        display.colorOff        = "#dbdcdc";
+
+        animate(0, 0, 0);
+  
+        function animate(h, m, s) {
+            var splited = display.value.split(":")
+
+            var actualHour = parseInt(splited[0])
+            var actualMinute = parseInt(splited[1])
+            var actualSecond = parseInt(splited[2])
+            
+            if (m < 0) {
+                if (actualHour == 0 && actualMinute + m  < 0) {
+                    return
+                } else if (actualMinute + m < 0) {
+                    h = -1
+                    actualMinute += 60
+                }
+            }
+
+            var hours = h + actualHour
+            var minutes = m + actualMinute
+            var seconds = s + actualSecond
+            
+            while (seconds >= 60) {
+                minutes += 1;
+                seconds -= 60;
+            }
+            
+            if (!(hours >= 99 && minutes >= 30)) {
+                while (minutes >= 60) {
+                    hours += 1;
+                    minutes -= 60;
+                }
+            } else {
+                minutes = 30;
+            }
+            
+            if (hours > 99) {
+                hours = 99
+            }
+
+            var value   = ((hours < 10) ? ' ' : '') + hours
+                        + ':' + ((minutes < 10) ? '0' : '') + minutes
+                        + ':' + ((seconds < 10) ? '0' : '') + seconds;
+            display.setValue(value);
+            window.setTimeout('animate(0, 0, 0)', 100);
+        }
+  
+    </script>
 {% endblock %}
 
 {% block content %}
     <div class="navbar">
         <span>Tempo de Jogo</span>
     </div>
-    <div class="difficulty-wrapper">
-        <div class="images">
-            <div>
-                <img class="img-easy" id="img-field-easy" src="/static/img/easy-uncolor.png" alt="field-easy" onclick="easyEvent()">
-                <span class="text-easy">Fácil</span>
-            </div>
-            <div>
-                <img class="img-medium" id="img-field-medium" src="/static/img/medium-uncolor.png" alt="field-medium" onclick="mediumEvent()">
-                <span class="text-medium">Médio</span>
-            </div>
-            <div>
-                <img class="img-hard" id="img-field-hard" src="/static/img/hard-uncolor.png" alt="field-hard" onclick="hardEvent()">
-                <span class="text-hard">Díficil</span>
+    <div class="time-wrapper">
+        <div>
+            <div style="padding: 50px 100px">
+                <canvas id="display" width="800" height="400"></canvas>
             </div>
         </div>
+        <div>
+            <div>
+                <button class="btn-red-30" onclick="changeTime(-30)">-30</button>
+            </div>
+            <div>
+                <button class="btn-red-10" onclick="changeTime(-10)">-10</button>
+            </div>
+            <div>
+                <button class="btn-red-1" onclick="changeTime(-1)">-</button>
+            </div>
+        </div>
+        <div>
+            <div>
+                <button class="btn-green-1" onclick="changeTime(1)">+</button>
+            </div>
+            <div>
+                <button class="btn-green-10" onclick="changeTime(10)">+10</button>
+            </div>
+            <div>
+                <button class="btn-green-30" onclick="changeTime(30)">+30</button>
+            </div>
+        </div>
+
         <div class="difficulty-action">
             <button id="btn-difficulty" onclick="confirm()">Confirmar</button>
         </div>
     </div>
 
     <script>
-
-        function easyEvent() {
-            var image_easy = document.getElementById('img-field-easy');
-            var image_medium = document.getElementById('img-field-medium');
-            var image_hard = document.getElementById('img-field-hard');
-
-            image_easy.src = "/static/img/easy.png";
-            image_medium.src = "/static/img/medium-uncolor.png";
-            image_hard.src = "/static/img/hard-uncolor.png";
-        }
-
-        function mediumEvent() {
-            var image_easy = document.getElementById('img-field-easy');
-            var image_medium = document.getElementById('img-field-medium');
-            var image_hard = document.getElementById('img-field-hard');
-
-            image_easy.src = "/static/img/easy-uncolor.png";
-            image_medium.src = "/static/img/medium.png";
-            image_hard.src = "/static/img/hard-uncolor.png";
-        }
-
-        function hardEvent() {
-            var image_easy = document.getElementById('img-field-easy');
-            var image_medium = document.getElementById('img-field-medium');
-            var image_hard = document.getElementById('img-field-hard');
-
-            image_easy.src = "/static/img/easy-uncolor.png";
-            image_medium.src = "/static/img/medium-uncolor.png";
-            image_hard.src = "/static/img/hard.png";
+        
+        function changeTime(minutes) {
+            animate(0, minutes, 0)
         }
 
         function confirm() {
@@ -70,7 +127,6 @@
             //     data: {},
             //     dataType: 'json'
             // });
-            
             window.location.replace("/start");
         }
     </script>
