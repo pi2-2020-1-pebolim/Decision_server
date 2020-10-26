@@ -42,4 +42,15 @@ class Field:
         
         self.lanes_x_positions = lanes_x_positions
         self.players = players
-      
+
+    def scale_real_dimensions_field(self):
+        # resize width frame field
+        FRAME_WIDTH_FIELD = 600
+
+        scaled_dimensions = []
+
+        for x_position in self.lanes_x_positions:
+            scaled_position = (x_position * self.width) / FRAME_WIDTH_FIELD
+            scaled_dimensions.append(scaled_position)
+
+        return scaled_position

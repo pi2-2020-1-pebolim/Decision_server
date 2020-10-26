@@ -256,8 +256,10 @@ class ImageController:
                 "desiredState": []
             }
 
+            scaled_lane_x_position = self.field.scale_real_dimensions_field()
+
             lanes_y_interception = self.regression.predict(
-                self.field.lanes_x_positions
+                scaled_lane_x_position
             )
 
             for lane_index, lane_y_interception in enumerate(lanes_y_interception):
