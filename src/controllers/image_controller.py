@@ -30,8 +30,10 @@ class ImageController:
 
     def register_event(self, event):
         self.field.set_field_dimensions(event['fieldDefinition']['dimensions'])
+        self.field.set_image_dimension(event['cameraSettings']['resolution'])
         self.field.set_lanes_players_positions(
-            event['fieldDefinition']['lanes'])
+            event['fieldDefinition']['lanes']
+        )
 
         # self.half_field_size = height_real_field // 2
 
@@ -256,39 +258,39 @@ class ImageController:
                 "desiredState": []
             }
 
-            scaled_lane_x_position = self.field.scale_real_dimensions_field()
+            # scaled_lane_x_position = self.field.scale_real_dimensions_field()
 
-            lanes_y_interception = self.regression.predict(
-                scaled_lane_x_position
-            )
+            # lanes_y_interception = self.regression.predict(
+            #     scaled_lane_x_position
+            # )
 
-            for lane_index, lane_y_interception in enumerate(lanes_y_interception):
-                for player in self.field.players:
-                    y_max_position = player.get_y_max_positions()
-                    y_min_position = player.get_y_min_positions()
-                    if player['laneID'] == lane_index and lane_y_interception >= y_min_position and lane_y_interception <= y_max_position:
-                        laneID = lane_index
-                        position = lane_y_interception - self.field.height / 2
-                        kick = False
-                        break
-                    else:
-                        pass
+            # for lane_index, lane_y_interception in enumerate(lanes_y_interception):
+            #     for player in self.field.players:
+            #         y_max_position = player.get_y_max_positions()
+            #         y_min_position = player.get_y_min_positions()
+            #         if player['laneID'] == lane_index and lane_y_interception >= y_min_position and lane_y_interception <= y_max_position:
+            #             laneID = lane_index
+            #             position = lane_y_interception - self.field.height / 2
+            #             kick = False
+            #             break
+            #         else:
+            #             pass
 
-                desired_state = {
-                    "laneID": laneID,
-                    "position": position,
-                    "kick": kick,
-                }
+            #     desired_state = {
+            #         "laneID": laneID,
+            #         "position": position,
+            #         "kick": kick,
+            #     }
 
-                decision['desireState'].append(desired_state)
+            #     decision['desireState'].append(desired_state)
 
-            self.socketio.emit('action', decision)
+            # self.socketio.emit('action', decision)
             # for rod_position in self.position_x_rods:
             #     if self.position_ball is not None and rod_position < self.position_ball[0]:
             #        y_regr_position_rod = self.regression.coef_[0] * rod_position + self.regression.intercept_
 
-            self.count_send_decision = 0
-            return decision
+            # self.count_send_decision = 0
+            # return decision
 
     def cut_deal_frame(self, image, ROI):
         decoded_string = Base64Convertion().decode_base_64(image)

@@ -1,21 +1,28 @@
-from player import Player
+from model.player import Player
 
 class Field:
 
     def __init__(self):
         super().__init__()
-        self.height = 0
-        self.width = 0
+        self.real_height = 0
+        self.real_width = 0
         self.lanes_x_positions = []
         self.players = []
+        self.scaled_x_positions = []
+        self.img_height = 0
+        self.img_width = 0
 
     def set_field_dimensions(self, dimensions):
-        [self.width, self.height] = dimensions
+        [self.real_width, self.real_height] = dimensions
+
+    def set_image_dimensions(self, resolution):
+        self.img_width = resolution['Item1']
+        self.img_height = resolution['Item2']
 
     def set_lanes_players_positions(self, lanes):
         lanes_x_positions = []
         players = []
-        lane_center_y_position = self.height / 2
+        lane_center_y_position = self.img_height / 2
         
         for lane in lanes:
             lanes_x_positions.append(lane['xPosition'])
@@ -43,14 +50,13 @@ class Field:
         self.lanes_x_positions = lanes_x_positions
         self.players = players
 
-    def scale_real_dimensions_field(self):
-        # resize width frame field
-        FRAME_WIDTH_FIELD = 600
+    def scale_real_dimensions_field(self, resolution):
+        image_width = resolution['Item1']
 
-        scaled_dimensions = []
+        scaled_x_positions = []
 
         for x_position in self.lanes_x_positions:
-            scaled_position = (x_position * self.width) / FRAME_WIDTH_FIELD
-            scaled_dimensions.append(scaled_position)
+            scaled_position = (x_position * self.real_width) / image_width
+            scaled_x_positions.append(scaled_position)
 
-        return scaled_position
+        self.scaled_x_positions = scaled_x_positions
