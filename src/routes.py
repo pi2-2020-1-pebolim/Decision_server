@@ -10,7 +10,7 @@ class Route:
     def __init__(self, app, socketio):
         self.app = app
         self.socketio = socketio
-        self.image_inst = ImageController(self.app)
+        self.image_inst = ImageController(self.app, self.socketio)
         self.image = ''
         self.calibrate = False
         self.cordinate_calibration = (0, 0, 0, 0)

@@ -11,9 +11,11 @@ import io
 
 from model.field import Field
 
+
 class ImageController:
-    def __init__(self, app):
+    def __init__(self, app, socketio):
         self.deque_memory = deque(maxlen=10)
+        self.socketio = socketio
         self.app = app
         self.regression = LinearRegression()
         self.position_x_rods = []
@@ -28,10 +30,11 @@ class ImageController:
 
     def register_event(self, event):
         self.field.set_field_dimensions(event['fieldDefinition']['dimensions'])
-        self.field.set_lanes_players_positions(event['fieldDefinition']['lanes'])
+        self.field.set_lanes_players_positions(
+            event['fieldDefinition']['lanes'])
 
         # self.half_field_size = height_real_field // 2
-        
+
         # for lane in event['fieldDefinition']['lanes']:
         #     rod_info = {}
 
@@ -109,7 +112,7 @@ class ImageController:
         self.image_width = width
         self.image_height = height
 
-        return (x_position, y_position, width, height)       
+        return (x_position, y_position, width, height)
 
     def retrieve_ball_coordinates(self, frame):
         # define the lower and upper boundaries of the "white"
@@ -164,8 +167,8 @@ class ImageController:
         new_list_positions = list_positions.copy()
         for position in range(len(list_positions)):
             if position != 0:
-              if list_positions[position] - list_positions[position - 1] < 5:
-                new_list_positions.remove(list_positions[position])
+                if list_positions[position] - list_positions[position - 1] < 5:
+                    new_list_positions.remove(list_positions[position])
 
         return new_list_positions
 
@@ -174,8 +177,8 @@ class ImageController:
         hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 
         # define range of blue color in HSV
-        blue_lower = np.array([70,150,150], np.uint8)
-        blue_upper = np.array([140,255,255], np.uint8)
+        blue_lower = np.array([70, 150, 150], np.uint8)
+        blue_upper = np.array([140, 255, 255], np.uint8)
 
         # Threshold the HSV image to get only blue colors
         mask = cv.inRange(hsv, blue_lower, blue_upper)
@@ -185,8 +188,8 @@ class ImageController:
         ret, thresh = cv.threshold(mask, 255, 255, 255)
 
         contours, hierarchy = cv.findContours(
-            mask, 
-            cv.RETR_EXTERNAL, 
+            mask,
+            cv.RETR_EXTERNAL,
             cv.CHAIN_APPROX_SIMPLE
         )
 
@@ -203,11 +206,11 @@ class ImageController:
         self.app.logger.info(self.position_x_rods)
 
     def estimate_positions(self, frame):
-        
+
         if len(self.deque_memory) == 10:
             x_positions, y_positions = zip(*self.deque_memory)
-            
-            self.regression.fit(    
+
+            self.regression.fit(
                 np.array(x_positions).reshape(-1, 1), np.array(y_positions)
             )
 
@@ -224,17 +227,19 @@ class ImageController:
                 end_point_x = 0
                 self.direction = 'left'
 
-            start_point_y = self.regression.coef_[0] * start_point_x + self.regression.intercept_
-            end_point_y = self.regression.coef_[0] * end_point_x + self.regression.intercept_
-            
+            start_point_y = self.regression.coef_[
+                0] * start_point_x + self.regression.intercept_
+            end_point_y = self.regression.coef_[
+                0] * end_point_x + self.regression.intercept_
+
             COLOR_LINE = (0, 50, 255)
             THICKNESS = 3
 
             frame = cv.line(
-                frame, 
+                frame,
                 (int(start_point_x), int(start_point_y)),
-                (int(end_point_x), int(end_point_y)), 
-                COLOR_LINE, 
+                (int(end_point_x), int(end_point_y)),
+                COLOR_LINE,
                 THICKNESS
             )
 
@@ -242,7 +247,7 @@ class ImageController:
 
     def define_action(self):
         DECISION_THRESHOLD = 3
-        
+
         self.count_send_decision = +self.count_send_decision
 
         if self.direction == 'left' and self.count_send_decision == DECISION_THRESHOLD:
@@ -251,7 +256,9 @@ class ImageController:
                 "desiredState": []
             }
 
-            lanes_y_interception = self.regression.predict(self.field.lanes_x_positions)
+            lanes_y_interception = self.regression.predict(
+                self.field.lanes_x_positions
+            )
 
             for lane_index, lane_y_interception in enumerate(lanes_y_interception):
                 for player in self.field.players:
@@ -264,19 +271,22 @@ class ImageController:
                         break
                     else:
                         pass
-                desiredState = {
+
+                desired_state = {
                     "laneID": laneID,
                     "position": position,
                     "kick": kick,
                 }
 
+                decision['desireState'].append(desired_state)
+
+            self.socketio.emit('action', decision)
             # for rod_position in self.position_x_rods:
             #     if self.position_ball is not None and rod_position < self.position_ball[0]:
             #        y_regr_position_rod = self.regression.coef_[0] * rod_position + self.regression.intercept_
 
             self.count_send_decision = 0
             return decision
-
 
     def cut_deal_frame(self, image, ROI):
         decoded_string = Base64Convertion().decode_base_64(image)
@@ -297,10 +307,10 @@ class ImageController:
 
         for i in self.position_x_rods:
             frame = cv.line(
-                frame, 
+                frame,
                 (int(i), int(0)),
-                (int(i), int(300)), 
-                COLOR_LINE, 
+                (int(i), int(300)),
+                COLOR_LINE,
                 THICKNESS
             )
 
@@ -309,5 +319,6 @@ class ImageController:
         is_success, gray_image_array = cv.imencode('.jpg', frame)
         gray_image = Image.fromarray(gray_image_array)
         encoded_gray_image = Base64Convertion().encode_base_64(
-            gray_image.tobytes()).decode('ascii')
+            gray_image.tobytes()
+        ).decode('ascii')
         return encoded_gray_image
