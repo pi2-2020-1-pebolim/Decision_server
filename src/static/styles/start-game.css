@@ -7,6 +7,23 @@
   align-items: center;
 }
 
+.playerDisplay {
+  position: absolute;
+  width: 500px;
+  height: 250px;
+  left: -10px;
+  top: 350px;
+
+}
+
+.machineDisplay {
+  position: absolute;
+  width: 500px;
+  height: 250px;
+  left: 550px;
+  top: 350px;
+}
+
 .btn-reset {
   position: absolute;
   width: 230px;
@@ -42,9 +59,6 @@
 
 body {
   font-family: sans-serif;
-  display: grid;
-  height: 100vh;
-  place-items: center;
 }
 
 .base-timer {

@@ -5,6 +5,53 @@
     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/start-game.css') }}">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script type="text/javascript" src="{{url_for('static',filename='js/timer.js') }}"></script>
+    <script type="text/javascript" src="{{url_for('static',filename='js/segment-display.js') }}"></script>
+    <script type="text/javascript">
+
+        var displayPlayer = new SegmentDisplay("displayPlayer");
+        displayPlayer.pattern         = "##";
+        displayPlayer.value           = '01';
+        displayPlayer.displayAngle    = 0.5;
+        displayPlayer.digitHeight     = 23;
+        displayPlayer.digitWidth      = 13;
+        displayPlayer.digitDistance   = 2.5;
+        displayPlayer.segmentWidth    = 2.5;
+        displayPlayer.segmentDistance = 0.3;
+        displayPlayer.segmentCount    = 7;
+        displayPlayer.cornerType      = 3;
+        displayPlayer.colorOn         = "#ff1b0f";
+        displayPlayer.colorOff        = "#dbdcdc";
+
+        var displayMachine = new SegmentDisplay("displayMachine");
+        displayMachine.pattern         = "##";
+        displayMachine.value           = '01';
+        displayMachine.displayAngle    = 0.5;
+        displayMachine.digitHeight     = 23;
+        displayMachine.digitWidth      = 13;
+        displayMachine.digitDistance   = 2.5;
+        displayMachine.segmentWidth    = 2.5;
+        displayMachine.segmentDistance = 0.3;
+        displayMachine.segmentCount    = 7;
+        displayMachine.cornerType      = 3;
+        displayMachine.colorOn         = "#ff1b0f";
+        displayMachine.colorOff        = "#dbdcdc";
+
+        animate(0, 0);
+  
+        function animate(playerPoint, machinePoint) {
+
+          var player = parseInt(displayPlayer.value) + playerPoint;
+          var machine = parseInt(displayMachine.value) + machinePoint;
+
+          var valuePlayer  = ((player < 10) ? ' ' : '') + player;
+          var valueMachine  = ((machine < 10) ? ' ' : '') + machine;
+
+          displayPlayer.setValue(valuePlayer);
+          displayMachine.setValue(valueMachine);
+          window.setTimeout('animate(0, 0)', 100);
+        }
+  
+    </script>
 
 {% endblock %}
 
@@ -36,10 +83,14 @@
           </div>
         </div>
       <div>
-          <button class="btn-reset" onclick="reset()">Resetar</button>
+        <canvas class="playerDisplay" id="displayPlayer"></canvas>
+        <canvas class="machineDisplay" id="displayMachine"></canvas>
       </div>
       <div>
-          <button class="btn-start" onclick="start()">Começar</button>
+          <button class="btn-reset" onclick="machineGoal()">Resetar</button>
+      </div>
+      <div>
+          <button class="btn-start" onclick="playerGoal()">Começar</button>
       </div>
       <div>
           <button class="btn-pause" onclick="pause()">Pausar</button>
@@ -49,6 +100,14 @@
     </div>
 
     <script>
+
+        function machineGoal() {
+            animate(1, 0);
+        }
+
+        function playerGoal() {
+            animate(0, 1);
+        }
         
         function reset() {
           window.location.replace("/start");

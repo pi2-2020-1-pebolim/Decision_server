@@ -3,6 +3,9 @@ html, body {
     padding: 0;
     box-sizing: border-box;
     font-family: 'Black Ops One', cursive;
+    display: grid;
+    place-items: center;
+    height: 100vh;
 }
 
 .navbar {
