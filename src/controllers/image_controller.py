@@ -25,8 +25,7 @@ class ImageController:
         self.rods_info = []
         self.half_field_size = 0
         self.field = Field()
-        self.image_width = 0
-        self.image_height = 0
+        self.MARGIN_FRAME = 25
 
     def register_event(self, event):
         self.field.set_field_dimensions(event['fieldDefinition']['dimensions'])
@@ -34,27 +33,6 @@ class ImageController:
         self.field.set_lanes_players_positions(
             event['fieldDefinition']['lanes']
         )
-
-        # self.half_field_size = height_real_field // 2
-
-        # for lane in event['fieldDefinition']['lanes']:
-        #     rod_info = {}
-
-        #     resize_pos_x_lane = (600 * lane['xPosition']) // (width_real_field + 65)
-        #     self.position_x_rods.append(resize_pos_x_lane)
-        #     resize_play_distance = (270 * lane['playerDistance']) // (height_real_field + 65)
-        #     resize_movement_limit = (270 * lane['movementLimit']) // (height_real_field + 65)
-        #     self.rods_info.append({
-        #         'laneID': lane['laneID'],
-        #         'movementLimit': resize_movement_limit,
-        #         'playerDistance': resize_play_distance,
-        #         'playerCount': lane['playerCount']
-        #     })
-
-        # self.app.logger.info(self.rods_info)
-
-        # self.app.logger.info(self.position_x_rods)
-        # pass
 
     def get_frame(self, encodedImage):
         decoded_string = Base64Convertion().decode_base_64(encodedImage)
@@ -69,7 +47,7 @@ class ImageController:
 
         # Take frame
         frame = decoded
-        frame = imutils.resize(frame, width=600)
+        # frame = imutils.resize(frame, width=600)
 
         # Convert BGR to HSV
         hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
@@ -101,7 +79,7 @@ class ImageController:
         (x, y, _, _) = sorted_contours[0]
         (x2, y2, w2, h2) = sorted_contours[-1]
 
-        MARGIN_FRAME = 25
+        MARGIN_FRAME = self.MARGIN_FRAME
 
         # self.map_rods_cpu_position(frame)
         self.app.logger.info(self.position_x_rods)
@@ -110,9 +88,6 @@ class ImageController:
         y_position = y - MARGIN_FRAME
         width = x2 + w2 + MARGIN_FRAME
         height = y2 + h2 + MARGIN_FRAME
-
-        self.image_width = width
-        self.image_height = height
 
         return (x_position, y_position, width, height)
 
@@ -142,7 +117,6 @@ class ImageController:
             mask.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE
         )
         contours = imutils.grab_contours(contours)
-        self.position_ball = None
         center = None
 
         # only proceed if at least one contour was found
@@ -153,7 +127,10 @@ class ImageController:
             max_contour = max(contours, key=cv.contourArea)
             ((x, y), radius) = cv.minEnclosingCircle(max_contour)
             M = cv.moments(max_contour)
-            center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+            center = (
+                self.MARGIN_FRAME + self.field.image_scale * int(M["m10"] / M["m00"]), 
+                self.MARGIN_FRAME + self.field.image_scale * int(M["m01"] / M["m00"])
+            )
             self.position_ball = center
             self.deque_memory.appendleft(center)
 
@@ -222,7 +199,7 @@ class ImageController:
 
             if x_positions[-1] - x_positions[0] < 0:
                 start_point_x = x_positions[0]
-                end_point_x = 600
+                end_point_x = 540
                 self.direction = 'right'
             elif x_positions[-1] - x_positions[0] > 0:
                 start_point_x = x_positions[0]
@@ -250,47 +227,43 @@ class ImageController:
     def define_action(self):
         DECISION_THRESHOLD = 3
 
-        self.count_send_decision = +self.count_send_decision
+        self.count_send_decision += self.count_send_decision
 
-        if self.direction == 'left' and self.count_send_decision == DECISION_THRESHOLD:
+        if self.count_send_decision == DECISION_THRESHOLD:
             decision = {
                 "evenType": "action",
                 "desiredState": []
             }
 
-            # scaled_lane_x_position = self.field.scale_real_dimensions_field()
+            lanes_x_positions = self.field.lanes_x_positions
 
-            # lanes_y_interception = self.regression.predict(
-            #     scaled_lane_x_position
-            # )
+            lanes_y_interception = self.regression.predict(
+                lanes_x_positions
+            )
 
-            # for lane_index, lane_y_interception in enumerate(lanes_y_interception):
-            #     for player in self.field.players:
-            #         y_max_position = player.get_y_max_positions()
-            #         y_min_position = player.get_y_min_positions()
-            #         if player['laneID'] == lane_index and lane_y_interception >= y_min_position and lane_y_interception <= y_max_position:
-            #             laneID = lane_index
-            #             position = lane_y_interception - self.field.height / 2
-            #             kick = False
-            #             break
-            #         else:
-            #             pass
+            for lane_index, lane_y_interception in enumerate(lanes_y_interception):
+                for player in self.field.players:
+                    if player['laneID'] == lane_index:
+                        y_max_position = player.get_y_max_positions()
+                        y_min_position = player.get_y_min_positions()
+                        if lane_y_interception >= y_min_position and lane_y_interception <= y_max_position:
+                            laneID = lane_index
+                            position = lane_y_interception - self.field.real_height / 2
+                            kick = False
+                            break
+                        else:
+                            pass
 
-            #     desired_state = {
-            #         "laneID": laneID,
-            #         "position": position,
-            #         "kick": kick,
-            #     }
+                desired_state = {
+                    "laneID": laneID,
+                    "position": position,
+                    "kick": kick,
+                }
 
-            #     decision['desireState'].append(desired_state)
+                decision['desireState'].append(desired_state)
 
             # self.socketio.emit('action', decision)
-            # for rod_position in self.position_x_rods:
-            #     if self.position_ball is not None and rod_position < self.position_ball[0]:
-            #        y_regr_position_rod = self.regression.coef_[0] * rod_position + self.regression.intercept_
-
-            # self.count_send_decision = 0
-            # return decision
+            self.count_send_decision = 0
 
     def cut_deal_frame(self, image, ROI):
         decoded_string = Base64Convertion().decode_base_64(image)
@@ -298,7 +271,7 @@ class ImageController:
 
         # Take frame
         frame = decoded
-        frame = imutils.resize(frame, width=600)
+        # frame = imutils.resize(frame, width=600)
 
         (x, y, w, h) = ROI
         frame = frame[y:h, x:w]

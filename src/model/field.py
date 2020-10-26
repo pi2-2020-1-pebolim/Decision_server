@@ -11,6 +11,7 @@ class Field:
         self.scaled_x_positions = []
         self.img_height = 0
         self.img_width = 0
+        self.img_scale = 0
 
     def set_field_dimensions(self, dimensions):
         [self.real_width, self.real_height] = dimensions
@@ -22,7 +23,7 @@ class Field:
     def set_lanes_players_positions(self, lanes):
         lanes_x_positions = []
         players = []
-        lane_center_y_position = self.img_height / 2
+        lane_center_y_position = self.real_height / 2
         
         for lane in lanes:
             lanes_x_positions.append(lane['xPosition'])
@@ -51,12 +52,4 @@ class Field:
         self.players = players
 
     def scale_real_dimensions_field(self, resolution):
-        image_width = resolution['Item1']
-
-        scaled_x_positions = []
-
-        for x_position in self.lanes_x_positions:
-            scaled_position = (x_position * self.real_width) / image_width
-            scaled_x_positions.append(scaled_position)
-
-        self.scaled_x_positions = scaled_x_positions
+        self.image_scale = self.real_width / self.img_width
