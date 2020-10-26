@@ -11,7 +11,7 @@ class Field:
         self.scaled_x_positions = []
         self.img_height = 0
         self.img_width = 0
-        self.img_scale = 0
+        self.image_scale = 0
 
     def set_field_dimensions(self, dimensions):
         [self.real_width, self.real_height] = dimensions
