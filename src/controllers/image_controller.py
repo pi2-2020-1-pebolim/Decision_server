@@ -8,6 +8,7 @@ import numpy as np
 import imutils
 import cv2 as cv
 import io
+import time
 
 from model.field import Field
 
@@ -29,7 +30,8 @@ class ImageController:
 
     def register_event(self, event):
         self.field.set_field_dimensions(event['fieldDefinition']['dimensions'])
-        self.field.set_image_dimension(event['cameraSettings']['resolution'])
+        self.field.set_image_dimensions(event['cameraSettings']['resolution'])
+        self.field.scale_real_dimensions_field()
         self.field.set_lanes_players_positions(
             event['fieldDefinition']['lanes']
         )
@@ -225,44 +227,47 @@ class ImageController:
             return frame
 
     def define_action(self):
-        DECISION_THRESHOLD = 3
+        DECISION_THRESHOLD = 6
 
-        self.count_send_decision += self.count_send_decision
+        self.count_send_decision += 1
 
-        if self.count_send_decision == DECISION_THRESHOLD:
+        if self.count_send_decision >= DECISION_THRESHOLD:
             decision = {
                 "evenType": "action",
+                "timestamp": int(time.time()),
                 "desiredState": []
             }
 
             lanes_x_positions = self.field.lanes_x_positions
 
             lanes_y_interception = self.regression.predict(
-                lanes_x_positions
+                np.array(lanes_x_positions).reshape(-1, 1)
             )
 
-            for lane_index, lane_y_interception in enumerate(lanes_y_interception):
+            
+
+            for lane_index, lane_y_interception in enumerate(lanes_y_interception):               
+
                 for player in self.field.players:
-                    if player['laneID'] == lane_index:
+                    if player.laneID == lane_index:
                         y_max_position = player.get_y_max_positions()
                         y_min_position = player.get_y_min_positions()
                         if lane_y_interception >= y_min_position and lane_y_interception <= y_max_position:
-                            laneID = lane_index
-                            position = lane_y_interception - self.field.real_height / 2
-                            kick = False
-                            break
+                            
+                            decision['desiredState'].append({
+                                "laneID": lane_index,
+                                "position": lane_y_interception - self.field.real_height / 2,
+                                "kick": False,
+                            })
+                           
+                            #break
                         else:
                             pass
 
-                desired_state = {
-                    "laneID": laneID,
-                    "position": position,
-                    "kick": kick,
-                }
+       
 
-                decision['desireState'].append(desired_state)
-
-            # self.socketio.emit('action', decision)
+            self.socketio.emit('action', decision)
+            self.app.logger.info(decision)
             self.count_send_decision = 0
 
     def cut_deal_frame(self, image, ROI):
@@ -298,4 +303,7 @@ class ImageController:
         encoded_gray_image = Base64Convertion().encode_base_64(
             gray_image.tobytes()
         ).decode('ascii')
+
+        self.define_action()
+
         return encoded_gray_image

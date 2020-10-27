@@ -51,5 +51,5 @@ class Field:
         self.lanes_x_positions = lanes_x_positions
         self.players = players
 
-    def scale_real_dimensions_field(self, resolution):
+    def scale_real_dimensions_field(self):
         self.image_scale = self.real_width / self.img_width
