@@ -60,8 +60,15 @@ class Route:
                     )
 
                     self.socketio.emit('update_image', {
-                        'image': f"data:image/jpeg;base64,{field_image}"
+                       'image': f"data:image/jpeg;base64,{field_image}"
                     })
+                else:
+                    self.app.logger.info(self.image)
+                    self.calibrate = True
+                    self.cordinate_calibration = self.image_inst.calibrate_field(
+                        self.image)
+                    self.app.logger.info('passou')
+                    self.app.logger.info(self.cordinate_calibration)
 
             return "OK"
 
