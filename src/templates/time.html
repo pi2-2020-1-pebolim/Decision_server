@@ -9,6 +9,7 @@
     <![endif]-->
 
     <script type="text/javascript" src="{{url_for('static',filename='js/segment-display.js') }}"></script>
+    <script type="text/javascript" src="{{url_for('static',filename='js/sweet-alert.js') }}"></script>
     <script type="text/javascript">
 
         var display = new SegmentDisplay("display");
@@ -138,10 +139,14 @@
             //     dataType: 'json'
             // });
 
-
-            var query = "?time=" + timeInSeconds.toString()
+            if (timeInSeconds > 0) {
+                var query = "?time=" + timeInSeconds.toString()
             
-            window.location.replace("/start" + query);
+                window.location.replace("/start" + query);
+            } else {
+                swal("Oops", "É necessário escolher um tempo!", "error" )
+            }
+            
         }
     </script>
 {% endblock %}
