@@ -249,7 +249,7 @@ class ImageController:
 
             
 
-            for lane_index, lane_y_interception in enumerate(lanes_y_interception):               
+            for lane_index, lane_y_interception in enumerate(lanes_y_interception):     
 
                 for player in self.field.players:
                     if player.laneID == lane_index:
@@ -257,13 +257,15 @@ class ImageController:
                         y_min_position = player.get_y_min_positions()
                         if lane_y_interception >= y_min_position and lane_y_interception <= y_max_position:
                             
+                            ball_diff = self.position_ball[0] - lanes_x_positions[lane_index]
+
                             decision['desiredState'].append({
                                 "laneID": lane_index,
                                 "position": lane_y_interception - self.field.real_height / 2,
-                                "kick": False,
+                                "kick": 0 < ball_diff < 35
                             })
                            
-                            #break
+                            break
                         else:
                             pass
 
