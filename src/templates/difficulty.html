@@ -3,6 +3,7 @@
 {% block head %}
     {{ super() }}
     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/difficulty.css') }}">
+    <script type="text/javascript" src="{{url_for('static',filename='js/sweet-alert.js') }}"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 {% endblock %}
 
@@ -32,6 +33,8 @@
 
     <script>
 
+        var choosed = false;
+
         function easyEvent() {
             var image_easy = document.getElementById('img-field-easy');
             var image_medium = document.getElementById('img-field-medium');
@@ -40,6 +43,8 @@
             image_easy.src = "/static/img/easy.png";
             image_medium.src = "/static/img/medium-uncolor.png";
             image_hard.src = "/static/img/hard-uncolor.png";
+
+            choosed = true;
         }
 
         function mediumEvent() {
@@ -50,6 +55,8 @@
             image_easy.src = "/static/img/easy-uncolor.png";
             image_medium.src = "/static/img/medium.png";
             image_hard.src = "/static/img/hard-uncolor.png";
+
+            choosed = true;
         }
 
         function hardEvent() {
@@ -60,6 +67,8 @@
             image_easy.src = "/static/img/easy-uncolor.png";
             image_medium.src = "/static/img/medium-uncolor.png";
             image_hard.src = "/static/img/hard.png";
+
+            choosed = true;
         }
 
         function confirm() {
@@ -71,7 +80,11 @@
             //     dataType: 'json'
             // });
             
-            window.location.replace("/time");
+            if (choosed) {
+                window.location.replace("/time");
+            } else {
+                swal("Oops", "É necessário escolher uma dificuldade!", "error" )
+            }
         }
     </script>
 {% endblock %}
