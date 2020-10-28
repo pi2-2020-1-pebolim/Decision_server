@@ -15,7 +15,8 @@ from model.field import Field
 
 class ImageController:
     def __init__(self, app, socketio):
-        self.deque_memory = deque(maxlen=10)
+        self.DEQUE_MAX = 10
+        self.deque_memory = deque(maxlen=self.DEQUE_MAX)
         self.socketio = socketio
         self.app = app
         self.regression = LinearRegression()
@@ -188,38 +189,40 @@ class ImageController:
 
     def estimate_positions(self, frame):
 
-        if len(self.deque_memory) == 10:
+        if len(self.deque_memory) >= self.DEQUE_MAX:
             x_positions, y_positions = zip(*self.deque_memory)
 
             self.regression.fit(
                 np.array(x_positions).reshape(-1, 1), np.array(y_positions)
             )
 
-            start_point_x = x_positions[0]
-            end_point_x = x_positions[0]
+            starting_point = [x_positions[0], y_positions[0]]
+            last_queue_point = [x_positions[-1], y_positions[-1]]
+            end_point = [0, 0]
+            
             self.direction = 'no_move'
 
-            if x_positions[-1] - x_positions[0] < 0:
-                start_point_x = x_positions[0]
-                end_point_x = 540
+            diff = end_point[0] - starting_point[0]
+            prediction = self.regression.predict(
+                np.array(last_queue_point[0] + diff).reshape(-1, 1)
+            )
+            end_point[0] = prediction
+
+            if x_positions[-1] < x_positions[0]:
                 self.direction = 'right'
-            elif x_positions[-1] - x_positions[0] > 0:
-                start_point_x = x_positions[0]
-                end_point_x = 0
+            elif x_positions[-1] > x_positions[0]:
                 self.direction = 'left'
 
-            start_point_y = self.regression.coef_[
-                0] * start_point_x + self.regression.intercept_
-            end_point_y = self.regression.coef_[
-                0] * end_point_x + self.regression.intercept_
+            end_point[1] = self.regression.coef_[
+                0] * end_point[0] + self.regression.intercept_
 
             COLOR_LINE = (0, 50, 255)
             THICKNESS = 3
 
             frame = cv.line(
                 frame,
-                (int(start_point_x), int(start_point_y)),
-                (int(end_point_x), int(end_point_y)),
+                (tuple(list(map(lambda x: int(x), starting_point)))),
+                (tuple(list(map(lambda x: int(x), end_point)))),
                 COLOR_LINE,
                 THICKNESS
             )
