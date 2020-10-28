@@ -8,22 +8,40 @@
 }
 
 .content-wrapper span {
-    margin-left: 15px;
-    color: #333;
-    font-weight: bold;
-    font-size: 45px;
-    margin-top: 15px;
+    position: absolute;
+    width: 499px;
+    height: 149px;
+    left: 311px;
+    top: 52px;
+
+    font-family: Black Ops One;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 70px;
+    line-height: 87px;
+
+    color: #028D49;
 }
 
 .content-wrapper button {
-    margin-top: 150px;
-    width: 500px;
-    height: 80px;
+    position: absolute;
+    width: 332px;
+    height: 57px;
+    left: 346px;
+    top: 687px;
+
+    background: #028D49;
     border-radius: 15px;
+
     border: none;
-    color: #FFF;
-    background-color: #48b200;
+
+    font-family: Black Ops One;
+    font-style: normal;
+    font-weight: normal;
     font-size: 30px;
-    font-weight: bold;
+    line-height: 37px;
+    /* identical to box height */
+
+    color: #FFFFFF;
     cursor: pointer; 
 }

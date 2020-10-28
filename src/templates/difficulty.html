@@ -1,0 +1,90 @@
+{% extends "index.html" %}
+
+{% block head %}
+    {{ super() }}
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/difficulty.css') }}">
+    <script type="text/javascript" src="{{url_for('static',filename='js/sweet-alert.js') }}"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="navbar">
+        <span>Dificuldade</span>
+    </div>
+    <div class="difficulty-wrapper">
+        <div class="images">
+            <div>
+                <img class="img-easy" id="img-field-easy" src="/static/img/easy-uncolor.png" alt="field-easy" onclick="easyEvent()">
+                <span class="text-easy">Fácil</span>
+            </div>
+            <div>
+                <img class="img-medium" id="img-field-medium" src="/static/img/medium-uncolor.png" alt="field-medium" onclick="mediumEvent()">
+                <span class="text-medium">Médio</span>
+            </div>
+            <div>
+                <img class="img-hard" id="img-field-hard" src="/static/img/hard-uncolor.png" alt="field-hard" onclick="hardEvent()">
+                <span class="text-hard">Díficil</span>
+            </div>
+        </div>
+        <div class="difficulty-action">
+            <button id="btn-difficulty" onclick="confirm()">Confirmar</button>
+        </div>
+    </div>
+
+    <script>
+
+        var choosed = false;
+
+        function easyEvent() {
+            var image_easy = document.getElementById('img-field-easy');
+            var image_medium = document.getElementById('img-field-medium');
+            var image_hard = document.getElementById('img-field-hard');
+
+            image_easy.src = "/static/img/easy.png";
+            image_medium.src = "/static/img/medium-uncolor.png";
+            image_hard.src = "/static/img/hard-uncolor.png";
+
+            choosed = true;
+        }
+
+        function mediumEvent() {
+            var image_easy = document.getElementById('img-field-easy');
+            var image_medium = document.getElementById('img-field-medium');
+            var image_hard = document.getElementById('img-field-hard');
+
+            image_easy.src = "/static/img/easy-uncolor.png";
+            image_medium.src = "/static/img/medium.png";
+            image_hard.src = "/static/img/hard-uncolor.png";
+
+            choosed = true;
+        }
+
+        function hardEvent() {
+            var image_easy = document.getElementById('img-field-easy');
+            var image_medium = document.getElementById('img-field-medium');
+            var image_hard = document.getElementById('img-field-hard');
+
+            image_easy.src = "/static/img/easy-uncolor.png";
+            image_medium.src = "/static/img/medium-uncolor.png";
+            image_hard.src = "/static/img/hard.png";
+
+            choosed = true;
+        }
+
+        function confirm() {
+
+            // $.ajax({
+            //     type: "GET",
+            //     url: 'http://localhost:3333/calibrate',
+            //     data: {},
+            //     dataType: 'json'
+            // });
+            
+            if (choosed) {
+                window.location.replace("/time");
+            } else {
+                swal("Oops", "É necessário escolher uma dificuldade!", "error" )
+            }
+        }
+    </script>
+{% endblock %}

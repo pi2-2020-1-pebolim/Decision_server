@@ -2,26 +2,65 @@ html, body {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Epilogue', sans-serif;
+    font-family: 'Black Ops One', cursive;
+    display: grid;
+    place-items: center;
+    height: 100vh;
 }
 
 .navbar {
+    position: absolute;
+    width: 1024px;
+    height: 101px;
+    left: 0px;
+    top: 0px;
+
     display: flex;
+    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    padding: 10px 25px;
-    background-color: #39a700;
+
+    background: #028D49;
 }
 
 .navbar span {
-    margin-left: 15px;
-    color: #FFF;
-    font-weight: bold;
-    font-size: 45px;
+
+    font-family: Black Ops One;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 48px;
+    line-height: 60px;
+
+    color: #FFFFFF;
 }
 
 .main-content {
-    width: 98%;
-    height: calc(100vh - 120px);
-    padding: 20px;
-    background-image: radial-gradient(#FFF, #DDD, #CCC);
+    position: relative;
+    width: 1024px;
+    height: 800px;
+
+    background: rgba(111, 207, 151, 0.2);
+}
+
+button {
+    position: absolute;
+    width: 332px;
+    height: 57px;
+    left: 346px;
+    top: 687px;
+
+    background: #028D49;
+    border-radius: 15px;
+
+    border: none;
+
+    font-family: Black Ops One;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 30px;
+    line-height: 37px;
+    /* identical to box height */
+
+    color: #FFFFFF;
+    cursor: pointer; 
 }
