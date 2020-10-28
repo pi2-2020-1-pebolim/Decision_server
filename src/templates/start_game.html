@@ -10,7 +10,7 @@
 
         var displayPlayer = new SegmentDisplay("displayPlayer");
         displayPlayer.pattern         = "##";
-        displayPlayer.value           = '01';
+        displayPlayer.value           = '00';
         displayPlayer.displayAngle    = 0.5;
         displayPlayer.digitHeight     = 23;
         displayPlayer.digitWidth      = 13;
@@ -24,7 +24,7 @@
 
         var displayMachine = new SegmentDisplay("displayMachine");
         displayMachine.pattern         = "##";
-        displayMachine.value           = '01';
+        displayMachine.value           = '00';
         displayMachine.displayAngle    = 0.5;
         displayMachine.digitHeight     = 23;
         displayMachine.digitWidth      = 13;
@@ -50,7 +50,7 @@
           displayMachine.setValue(valueMachine);
           window.setTimeout('animate(0, 0)', 100);
         }
-  
+
     </script>
 
 {% endblock %}
@@ -87,10 +87,16 @@
         <canvas class="machineDisplay" id="displayMachine"></canvas>
       </div>
       <div>
-          <button class="btn-reset" onclick="machineGoal()">Resetar</button>
+          <button class="btn-finish" onclick="finish()">Finalizar</button>
       </div>
       <div>
-          <button class="btn-start" onclick="playerGoal()">Começar</button>
+          <button class="btn-restart" onclick="restart()">Novo Jogo</button>
+      </div>
+      <div>
+          <button class="btn-reset" onclick="reset()">Resetar</button>
+      </div>
+      <div>
+          <button class="btn-start" onclick="start()">Começar</button>
       </div>
       <div>
           <button class="btn-pause" onclick="pause()">Pausar</button>
@@ -108,17 +114,25 @@
         function playerGoal() {
             animate(0, 1);
         }
+
+        function finish() {
+          window.location.replace("/");
+        }
+
+        function restart() {
+          window.location.replace("/difficulty");
+        }
         
         function reset() {
-          window.location.replace("/start");
+          new resetTimer();
         }
 
         function start() {
-          window.location.replace("/start");
+          new unpauseTimer();
         }
 
         function pause() {
-          window.location.replace("/start");
+          new pauseTimer();
         }
     </script>
 {% endblock %}

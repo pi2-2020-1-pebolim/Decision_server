@@ -12,7 +12,7 @@
   width: 500px;
   height: 250px;
   left: -10px;
-  top: 350px;
+  top: 320px;
 
 }
 
@@ -21,7 +21,7 @@
   width: 500px;
   height: 250px;
   left: 550px;
-  top: 350px;
+  top: 320px;
 }
 
 .btn-reset {
@@ -29,7 +29,7 @@
   width: 230px;
   height: 57px;
   left: 136px;
-  top: 696px;
+  top: 713px;
 
   background: #028D49;
   border-radius: 15px;
@@ -40,7 +40,7 @@
   width: 230px;
   height: 57px;
   left: 397px;
-  top: 696px;
+  top: 713px;
 
   background: #028D49;
   border-radius: 15px;
@@ -51,9 +51,31 @@
   width: 230px;
   height: 57px;
   left: 658px;
-  top: 696px;
+  top: 713px;
 
   background: #028D49;
+  border-radius: 15px;
+}
+
+.btn-restart {
+  position: absolute;
+  width: 230px;
+  height: 57px;
+  left: 251px;
+  top: 632px;
+  
+  background: #323694;
+  border-radius: 15px;
+}
+
+.btn-finish {
+  position: absolute;
+  width: 230px;
+  height: 57px;
+  left: 527px;
+  top: 632px;
+
+  background: #B01A1A;
   border-radius: 15px;
 }
 
@@ -63,7 +85,7 @@ body {
 
 .base-timer {
   position: relative;
-  width: 150px;
+  width: 200px;
   height: 142px;
   top: -210px;
 }
@@ -106,8 +128,8 @@ body {
 
 .base-timer__label {
   position: absolute;
-  width: 150px;
-  height: 142px;
+  width: 200px;
+  height: 180px;
   top: 0;
   display: flex;
   align-items: center;
