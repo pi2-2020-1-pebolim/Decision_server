@@ -120,6 +120,16 @@
         }
 
         function confirm() {
+            var splited = display.value.split(":")
+
+            var actualHour = parseInt(splited[0])
+            var actualMinute = parseInt(splited[1])
+            var actualSecond = parseInt(splited[2])
+            
+            var hoursSeconds = actualHour * 3600;
+            var minutesSeconds = actualMinute * 60;
+
+            var timeInSeconds = hoursSeconds + minutesSeconds + actualSecond;
 
             // $.ajax({
             //     type: "GET",
@@ -127,7 +137,11 @@
             //     data: {},
             //     dataType: 'json'
             // });
-            window.location.replace("/start");
+
+
+            var query = "?time=" + timeInSeconds.toString()
+            
+            window.location.replace("/start" + query);
         }
     </script>
 {% endblock %}
