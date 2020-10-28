@@ -298,6 +298,23 @@ class ImageController:
 
         # self.map_rods_cpu_position(frame)
 
+        font = cv.FONT_HERSHEY_SIMPLEX
+        corner = (50,50)
+        fontScale = 1
+        fontColor = (255,255,255)
+        lineType = 2
+
+        cv.putText(
+            frame,
+            f'X:{int(self.position_ball[0])}, Y: {int(self.position_ball[1])}', 
+            corner, 
+            font, 
+            fontScale,
+            fontColor,
+            lineType
+        )
+
+
         is_success, gray_image_array = cv.imencode('.jpg', frame)
         gray_image = Image.fromarray(gray_image_array)
         encoded_gray_image = Base64Convertion().encode_base_64(
