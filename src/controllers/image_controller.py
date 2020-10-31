@@ -82,7 +82,7 @@ class ImageController:
         (x, y, _, _) = sorted_contours[0]
         (x2, y2, w2, h2) = sorted_contours[-1]
 
-        MARGIN_FRAME = self.MARGIN_FRAME
+        MARGIN_FRAME = 0
 
         # self.map_rods_cpu_position(frame)
         self.app.logger.info(self.position_x_rods)
@@ -131,8 +131,8 @@ class ImageController:
             ((x, y), radius) = cv.minEnclosingCircle(max_contour)
             M = cv.moments(max_contour)
             center = (
-                self.MARGIN_FRAME + self.field.image_scale * int(M["m10"] / M["m00"]), 
-                self.MARGIN_FRAME + self.field.image_scale * int(M["m01"] / M["m00"])
+                int(M["m10"] / M["m00"]), 
+                int(M["m01"] / M["m00"])
             )
             self.position_ball = center
             self.deque_memory.appendleft(center)
