@@ -217,8 +217,27 @@ class ImageController:
                 0] * end_point[0] + self.regression.intercept_
 
             COLOR_LINE = (0, 50, 255)
-            THICKNESS = 3
+        THICKNESS = 1
 
+
+        cv.circle(
+            frame, 
+            (int(self.position_ball[0]), int(self.position_ball[1])),
+            1,
+            (0, 0, 255),
+            1
+        )
+
+        for index, (x, y) in enumerate(self.deque_memory):
+            cv.circle(
+                frame, 
+                (int(x), int(y)),
+                1,
+                (0, 0, 255),
+                2 if index < 5 else 1
+            )   
+
+        if self.direction != 'no_move':
             frame = cv.line(
                 frame,
                 (tuple(list(map(lambda x: int(x), starting_point)))),
@@ -297,26 +316,30 @@ class ImageController:
                 frame,
                 (int(i), int(0)),
                 (int(i), int(300)),
-                COLOR_LINE,
-                THICKNESS
+                    (0, 50, 255),
+                    3
             )
 
         # self.map_rods_cpu_position(frame)
 
-        font = cv.FONT_HERSHEY_SIMPLEX
-        corner = (50,50)
-        fontScale = 1
-        fontColor = (255,255,255)
-        lineType = 2
-
+            # debug drawings:
         cv.putText(
             frame,
             f'X:{int(self.position_ball[0])}, Y: {int(self.position_ball[1])}', 
-            corner, 
-            font, 
-            fontScale,
-            fontColor,
-            lineType
+                self.field.apply_int_scale(10,200), 
+                cv.FONT_HERSHEY_SIMPLEX, 
+                0.5,
+                (255,255,255),
+                1
+            )
+
+            for player in self.field.players:
+                cv.circle(
+                    frame, 
+                    self.field.remove_int_scale(player.xPosition, player.yCenterPosition),
+                    5,
+                    (251, 255, 0),
+                    1
         )
 
 
