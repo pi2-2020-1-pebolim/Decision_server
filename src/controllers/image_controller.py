@@ -13,29 +13,29 @@ import time
 from model.field import Field
 
 
+# calcula o roi
+# gerencia o frame (cuida da imagemm, gerencia debug, encontra posição da bola)
+
 class ImageController:
-    def __init__(self, app, socketio):
-        self.DEQUE_MAX = 10
-        self.deque_memory = deque(maxlen=self.DEQUE_MAX)
+    def __init__(self, app, socketio, event_controller):
+       
         self.socketio = socketio
         self.app = app
-        self.regression = LinearRegression()
-        self.position_x_rods = []
-        self.direction = 'no_move'
-        self.position_ball = None
-        self.count_send_decision = 0
-        self.rods_info = []
-        self.half_field_size = 0
-        self.field = Field()
-        self.MARGIN_FRAME = 25
+        self.event_controller = event_controller
 
-    def register_event(self, event):
-        self.field.set_field_dimensions(event['fieldDefinition']['dimensions'])
-        self.field.set_image_dimensions(event['cameraSettings']['resolution'])
-        self.field.scale_real_dimensions_field()
-        self.field.set_lanes_players_positions(
-            event['fieldDefinition']['lanes']
-        )
+        self.ROI = None
+       
+        self.position_x_rods = []
+        self.rods_info = []
+       
+        self.half_field_size = 0
+        self.MARGIN_FRAME = 25
+       
+        self.count_send_decision = 0
+
+    @property
+    def is_calibrated(self):
+        return self.ROI is not None
 
     def get_frame(self, encodedImage):
         decoded_string = Base64Convertion().decode_base_64(encodedImage)
@@ -92,9 +92,9 @@ class ImageController:
         width = x2 + w2 + MARGIN_FRAME
         height = y2 + h2 + MARGIN_FRAME
 
-        return (x_position, y_position, width, height)
+        self.ROI = (x_position, y_position, width, height)
 
-    def retrieve_ball_coordinates(self, frame):
+    def retrieve_ball_coordinates(self, frame): 
         # define the lower and upper boundaries of the "white"
         # ball in the HSV color space
         # ball RGB color (0, 0, 0)
@@ -134,8 +134,13 @@ class ImageController:
                 int(M["m10"] / M["m00"]), 
                 int(M["m01"] / M["m00"])
             )
-            self.position_ball = center
-            self.deque_memory.appendleft(center)
+
+            real_center = (
+                self.event_controller.field.to_real(center[0]),
+                self.event_controller.field.to_real(center[1])
+            )
+
+            self.event_controller.ball.update_position(real_center)
 
             # only proceed if the radius meets a minimum size
             # ball_minimum_size = 1
@@ -187,130 +192,11 @@ class ImageController:
         self.position_x_rods = self.verify_next_positions(self.position_x_rods)
         self.app.logger.info(self.position_x_rods)
 
-    def estimate_positions(self, frame):
+    def _debug_frame(self, frame):
 
-        if len(self.deque_memory) >= self.DEQUE_MAX:
-            x_positions, y_positions = zip(*self.deque_memory)
+        # debug drawings:
 
-            self.regression.fit(
-                np.array(x_positions).reshape(-1, 1), np.array(y_positions)
-            )
-
-            starting_point = [x_positions[0], y_positions[0]]
-            last_queue_point = [x_positions[-1], y_positions[-1]]
-            end_point = [0, 0]
-            
-            self.direction = 'no_move'
-
-            diff = end_point[0] - starting_point[0]
-            prediction = self.regression.predict(
-                np.array(last_queue_point[0] + diff).reshape(-1, 1)
-            )
-            end_point[0] = prediction
-
-            if x_positions[-1] < x_positions[0]:
-                self.direction = 'right'
-            elif x_positions[-1] > x_positions[0]:
-                self.direction = 'left'
-
-            end_point[1] = self.regression.coef_[
-                0] * end_point[0] + self.regression.intercept_
-
-            COLOR_LINE = (0, 50, 255)
-        THICKNESS = 1
-
-
-        cv.circle(
-            frame, 
-            (int(self.position_ball[0]), int(self.position_ball[1])),
-            1,
-            (0, 0, 255),
-            1
-        )
-
-        for index, (x, y) in enumerate(self.deque_memory):
-            cv.circle(
-                frame, 
-                (int(x), int(y)),
-                1,
-                (0, 0, 255),
-                2 if index < 5 else 1
-            )   
-
-        if self.direction != 'no_move':
-            frame = cv.line(
-                frame,
-                (tuple(list(map(lambda x: int(x), starting_point)))),
-                (tuple(list(map(lambda x: int(x), end_point)))),
-                COLOR_LINE,
-                THICKNESS
-            )
-
-            return frame
-
-    def define_action(self):
-        DECISION_THRESHOLD = 6
-
-        self.count_send_decision += 1
-
-        if self.count_send_decision >= DECISION_THRESHOLD:
-            decision = {
-                "evenType": "action",
-                "timestamp": int(time.time()),
-                "desiredState": []
-            }
-
-            lanes_x_positions = self.field.lanes_x_positions
-
-            lanes_y_interception = self.regression.predict(
-                np.array(lanes_x_positions).reshape(-1, 1)
-            )
-
-            
-
-            for lane_index, lane_y_interception in enumerate(lanes_y_interception):     
-
-                for player in self.field.players:
-                    if player.laneID == lane_index:
-                        y_max_position = player.get_y_max_positions()
-                        y_min_position = player.get_y_min_positions()
-                        if lane_y_interception >= y_min_position and lane_y_interception <= y_max_position:
-                            
-                            ball_diff = self.position_ball[0] - lanes_x_positions[lane_index]
-
-                            decision['desiredState'].append({
-                                "laneID": lane_index,
-                                "position": lane_y_interception - self.field.real_height / 2,
-                                "kick": 0 < ball_diff < 35
-                            })
-                           
-                            break
-                        else:
-                            pass
-
-       
-
-            self.socketio.emit('action', decision)
-            self.app.logger.info(decision)
-            self.count_send_decision = 0
-
-    def cut_deal_frame(self, image, ROI):
-        decoded_string = Base64Convertion().decode_base_64(image)
-        decoded = cv.imdecode(np.frombuffer(decoded_string, np.uint8), -1)
-
-        # Take frame
-        frame = decoded
-        # frame = imutils.resize(frame, width=600)
-
-        (x, y, w, h) = ROI
-        frame = frame[y:h, x:w]
-
-        ball = self.retrieve_ball_coordinates(frame)
-        frame = self.estimate_positions(ball[1])
-
-        COLOR_LINE = (0, 50, 255)
-        THICKNESS = 3
-
+        # draw a line on each rod
         for i in self.position_x_rods:
             frame = cv.line(
                 frame,
@@ -320,35 +206,88 @@ class ImageController:
                     3
             )
 
-        # self.map_rods_cpu_position(frame)
-
-            # debug drawings:
+        # draw current ball position as a text on image
         cv.putText(
             frame,
             f'X:{int(self.position_ball[0])}, Y: {int(self.position_ball[1])}', 
-                self.field.apply_int_scale(10,200), 
-                cv.FONT_HERSHEY_SIMPLEX, 
-                0.5,
-                (255,255,255),
+            (10,200), 
+            cv.FONT_HERSHEY_SIMPLEX, 
+            0.5,
+            (255,255,255),
+            1
+        )
+
+        # draw a circle around each player initial position
+        for player in self.field.players:
+            cv.circle(
+                frame, 
+                (player.xPosition, player.yCenterPosition),
+                5,
+                (251, 255, 0),
                 1
             )
 
-            for player in self.field.players:
-                cv.circle(
-                    frame, 
-                    self.field.remove_int_scale(player.xPosition, player.yCenterPosition),
-                    5,
-                    (251, 255, 0),
-                    1
+        COLOR_LINE = (0, 50, 255)
+        THICKNESS = 1
+
+        # draw a dot on the current ball position
+        cv.circle(
+            frame, 
+            (int(self.position_ball[0]), int(self.position_ball[1])),
+            1,
+            (0, 0, 255),
+            1
         )
 
+        # draw a breadcrumb for the ball
+        for index, (x, y) in enumerate(self.deque_memory):
+            cv.circle(
+                frame, 
+                (int(x), int(y)),
+                1,
+                (0, 0, 255),
+                2 if index < 5 else 1
+            )   
 
-        is_success, gray_image_array = cv.imencode('.jpg', frame)
+        # draw the predicted movement line
+        if self.direction != 'no_move':
+            frame = cv.line(
+                frame,
+                (tuple(list(map(lambda x: int(x), starting_point)))),
+                (tuple(list(map(lambda x: int(x), end_point)))),
+                COLOR_LINE,
+                THICKNESS
+            )
+        
+        return frame
+
+    def decode_frame_from_string(self, image_string):
+        decoded_string = Base64Convertion().decode_base_64(image_string)
+        decoded = cv.imdecode(np.frombuffer(decoded_string, np.uint8), -1)
+
+        # Take frame
+        return decoded
+
+    def encode_string_from_frame(self, frame):
+        
+        _, gray_image_array = cv.imencode('.jpg', frame)
+
         gray_image = Image.fromarray(gray_image_array)
         encoded_gray_image = Base64Convertion().encode_base_64(
             gray_image.tobytes()
         ).decode('ascii')
 
-        self.define_action()
-
         return encoded_gray_image
+
+    def process_image(self, image):
+        
+        frame = self.decode_frame_from_string(image)
+
+        # cuts frame to show only the ROI
+        (x, y, w, h) = self.ROI
+        frame = frame[y:h, x:w]
+
+        self.retrieve_ball_coordinates(frame)
+        #frame = self._debug_frame(frame)
+
+        return self.encode_string_from_frame(frame)

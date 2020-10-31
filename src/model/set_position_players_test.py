@@ -36,7 +36,7 @@ new_field.set_field_dimensions([150, 70])
 
 new_field.set_lanes_players_positions(lanes)
 
-print(new_field.lanes_x_positions)
+print(new_field.lanes_real_x_positions)
 
 for index, player in enumerate(new_field.players):
     print(f"\nJogador: {index + 1}\nID Haste: {player.laneID}\nX: {player.xPosition}\nY central: {player.yCenterPosition}\nY máximo: {player.yMaxPosition}\nY mínimo: {player.yMinPosition}")
