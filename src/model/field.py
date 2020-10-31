@@ -72,3 +72,13 @@ class Field:
 
     def to_pixel(self, x):
         return x / self.image_scale
+
+    def convert_tuple_to_pixel(self, x, y):
+        return (
+            self.to_pixel(x),
+            self.to_pixel(y)
+        )
+
+    def convert_tuple_to_pixel_int(self, x, y):
+        pixel_tuple = self.convert_tuple_to_pixel(x, y) 
+        return (int(pixel_tuple[0]), int(pixel_tuple[1]))

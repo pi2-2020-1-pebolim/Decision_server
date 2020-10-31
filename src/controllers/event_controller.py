@@ -71,15 +71,17 @@ class EventController:
 
     def update_event(self, image):
 
+        if self.field is None: 
+            return
+        
         # autocalibration for testing
         if not self.image_controller.is_calibrated:
             self.image_controller.calibrate_field(
                 image
             )
-        
+
         # debug log
         self.app.logger.info(self.image_controller.ROI)
-
         result = self.image_controller.process_image(image)
         self.define_action()
 

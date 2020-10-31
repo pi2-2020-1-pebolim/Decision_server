@@ -207,9 +207,12 @@ class ImageController:
             )
 
         # draw current ball position as a text on image
+        
+        real_position = self.event_controller.ball.real_position_ball
+        pixel_position = self.event_controller.field.convert_tuple_to_pixel(*real_position)
         cv.putText(
             frame,
-            f'X:{int(self.position_ball[0])}, Y: {int(self.position_ball[1])}', 
+            f'real:{real_position}/pixel:{pixel_position}', 
             (10,200), 
             cv.FONT_HERSHEY_SIMPLEX, 
             0.5,
@@ -218,46 +221,34 @@ class ImageController:
         )
 
         # draw a circle around each player initial position
-        for player in self.field.players:
+        for player in self.event_controller.field.players:
             cv.circle(
                 frame, 
-                (player.xPosition, player.yCenterPosition),
+                self.event_controller.field.convert_tuple_to_pixel_int(player.xPosition, player.yCenterPosition),
                 5,
                 (251, 255, 0),
                 1
             )
 
-        COLOR_LINE = (0, 50, 255)
-        THICKNESS = 1
-
-        # draw a dot on the current ball position
-        cv.circle(
-            frame, 
-            (int(self.position_ball[0]), int(self.position_ball[1])),
-            1,
-            (0, 0, 255),
-            1
-        )
-
         # draw a breadcrumb for the ball
-        for index, (x, y) in enumerate(self.deque_memory):
+        for index, (x, y) in enumerate(self.event_controller.ball.deque_memory):
             cv.circle(
                 frame, 
-                (int(x), int(y)),
+                self.event_controller.field.convert_tuple_to_pixel_int(x, y),
                 1,
                 (0, 0, 255),
                 2 if index < 5 else 1
             )   
 
         # draw the predicted movement line
-        if self.direction != 'no_move':
-            frame = cv.line(
-                frame,
-                (tuple(list(map(lambda x: int(x), starting_point)))),
-                (tuple(list(map(lambda x: int(x), end_point)))),
-                COLOR_LINE,
-                THICKNESS
-            )
+        #if self.direction != 'no_move':
+        #    frame = cv.line(
+        #        frame,
+        #        (tuple(list(map(lambda x: int(x), starting_point)))),
+        #        (tuple(list(map(lambda x: int(x), end_point)))),
+        #        (0, 0, 255),
+        #        2
+        #    )
         
         return frame
 
@@ -288,6 +279,6 @@ class ImageController:
         frame = frame[y:h, x:w]
 
         self.retrieve_ball_coordinates(frame)
-        #frame = self._debug_frame(frame)
+        frame = self._debug_frame(frame)
 
         return self.encode_string_from_frame(frame)
