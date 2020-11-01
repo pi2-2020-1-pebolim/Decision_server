@@ -21,13 +21,25 @@
 
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
         <script type="text/javascript" charset="utf-8">
-            var socket = io('http://localhost:3333');
-            var socket = io({
-                reconnection: true,
-                reconnectionAttempts: Infinity,
-                reconnectionDelay: 1000,
-                reconnectionDelayMax: 1500,
-                timeout: 1500,
+            function uuidv4() {
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+            }
+
+            var socket = io(
+                {
+                    reconnection: true,
+                    reconnectionAttempts: Infinity,
+                    reconnectionDelay: 1000,
+                    reconnectionDelayMax: 1500,
+                    timeout: 1500,
+                }
+            );
+
+            socket.on('connect', () => {
+                socket.emit('join', {'username': uuidv4(), room: 'web'});
             });
 
             socket.on('update_image', function(msg) {
@@ -40,10 +52,6 @@
                 console.log('connect');
             });
 
-            var btn = document.getElementById('btn');
-            btn.onclick = () => {
-                socket.emit('show_image');
-            };
         </script>
     </body>
 </html>

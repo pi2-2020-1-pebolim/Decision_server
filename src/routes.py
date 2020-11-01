@@ -2,10 +2,9 @@
 from flask import jsonify, render_template, request, make_response, json
 from controllers.image_controller import ImageController
 from controllers.event_controller import EventController
-from flask_socketio import emit, send
+from flask_socketio import emit, send, join_room, leave_room
 
 from json import loads
-
 
 class Route:
     def __init__(self, app, socketio):
@@ -55,11 +54,22 @@ class Route:
                 field_image = self.event_controller.update_event(self.image)
                 
                 if field_image is not None:
-                    self.socketio.emit('update_image', {
-                        'image': f"data:image/jpeg;base64,{field_image}"
-                    })
+                    self.socketio.emit(
+                        'update_image',
+                        {
+                            'image': f"data:image/jpeg;base64,{field_image}"
+                        },
+                        room='web'
+                    )
        
             return "OK"
+
+        @self.socketio.on('join')
+        def on_join(data):
+            username = data['username']
+            room = data['room']
+            join_room(room)
+            send(username + ' has entered the room.', room=room)
 
         @self.app.route('/api/register', methods=['POST'])
         def register_event():
