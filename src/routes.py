@@ -1,5 +1,5 @@
-
-from flask import jsonify, render_template, request, make_response, json
+import os
+from flask import jsonify, render_template, request, make_response, json, send_from_directory
 from controllers.image_controller import ImageController
 from controllers.event_controller import EventController
 from flask_socketio import emit, send, join_room, leave_room
@@ -14,6 +14,11 @@ class Route:
         self.image = ''
 
     def routes(self):
+        @self.app.route('/favicon.ico')
+        def favicon():
+            return send_from_directory(os.path.join(self.app.root_path, 'static/img'),
+                                    'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
         @self.app.route('/')
         def main_route():
             return render_template('start-menu.html', image='')
@@ -21,6 +26,14 @@ class Route:
         @self.app.route('/calibration')
         def calibration():
             return render_template('calibration.html')
+
+        @self.app.route('/difficulty')
+        def difficulty():
+            return render_template('difficulty.html')
+
+        @self.app.route('/time')
+        def time():
+            return render_template('time.html')
 
         @self.app.route('/start')
         def start_game():
