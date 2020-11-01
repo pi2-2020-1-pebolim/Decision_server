@@ -13,6 +13,7 @@ import time
 from model.field import Field
 from model.ball import Ball
 from controllers.image_controller import ImageController 
+from controllers.decision_controller import DecisionController 
 
 class EventController:
 
@@ -21,53 +22,12 @@ class EventController:
         self.socketio = socketio
         self.app = app
 
-        self.image_controller = ImageController(app, socketio, self)
-
         self.field = None
         self.ball = Ball()
 
-        self.count_send_decision = 0
-        
-    def define_action(self):
-        DECISION_THRESHOLD = 6
+        self.image_controller = ImageController(app, socketio, self)
+        self.decision_controller = DecisionController(app, socketio, self) 
 
-        self.count_send_decision += 1
-
-        if self.count_send_decision >= DECISION_THRESHOLD:
-            decision = {
-                "evenType": "action",
-                "timestamp": int(time.time()),
-                "desiredState": []
-            }
-
-            lanes_x_positions = self.field.lanes_real_x_positions
-
-            lanes_y_interception = self.ball.regression.predict(
-                np.array(lanes_x_positions).reshape(-1, 1)
-            )
-
-            for lane_index, lane_y_interception in enumerate(lanes_y_interception):     
-
-                for player in self.field.players:
-                    if player.laneID == lane_index:
-
-                        if player.can_intercept(lane_y_interception):
-                            
-                            ball_diff_x = self.ball.real_position_ball[0] - lanes_x_positions[lane_index]
-
-                            decision['desiredState'].append({
-                                "laneID": lane_index,
-                                "position": lane_y_interception - self.field.real_height / 2,
-                                "kick": 0 < ball_diff_x < 35
-                            })
-                           
-                            break
-                        else:
-                            pass       
-
-            self.socketio.emit('action', decision)
-            self.app.logger.info(decision)
-            self.count_send_decision = 0
 
     def update_event(self, image):
 
@@ -83,7 +43,7 @@ class EventController:
         # debug log
         self.app.logger.info(self.image_controller.ROI)
         result = self.image_controller.process_image(image)
-        self.define_action()
+        self.decision_controller.define_action()
 
         return result
 
