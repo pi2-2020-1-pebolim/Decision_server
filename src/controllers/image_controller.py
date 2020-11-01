@@ -236,15 +236,33 @@ class ImageController:
             )   
 
         # draw the predicted movement line
-        #if self.direction != 'no_move':
-        #    frame = cv.line(
-        #        frame,
-        #        (tuple(list(map(lambda x: int(x), starting_point)))),
-        #        (tuple(list(map(lambda x: int(x), end_point)))),
-        #        (0, 0, 255),
-        #        2
-        #    )
-        
+        ball = self.event_controller.ball
+        most_recent_point = ball.deque_memory[-1]
+        oldest_point = ball.deque_memory[0]
+        frame = cv.line(
+            frame,
+            self.event_controller.field.to_pixel_int(*most_recent_point),
+            self.event_controller.field.to_pixel_int(*oldest_point),
+            (0, 0, 255),
+            1
+        )
+
+        diff = (
+            most_recent_point[0] - oldest_point[0] ,
+            most_recent_point[1] - oldest_point[1]
+        )
+        future_point = (
+            oldest_point[0] - diff[0],
+            oldest_point[1] - diff[1]
+        )
+        frame = cv.line(
+            frame,
+            self.event_controller.field.to_pixel_int(*oldest_point),
+            self.event_controller.field.to_pixel_int(*future_point),
+            (50,240,255),
+            1
+        )
+    
         return frame
 
     def decode_frame_from_string(self, image_string):
