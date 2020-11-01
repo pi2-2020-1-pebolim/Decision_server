@@ -29,7 +29,7 @@ class ImageController:
         self.rods_info = []
        
         self.half_field_size = 0
-        self.MARGIN_FRAME = 25
+        self.MARGIN_FRAME = 0
        
         self.count_send_decision = 0
 
@@ -82,15 +82,13 @@ class ImageController:
         (x, y, _, _) = sorted_contours[0]
         (x2, y2, w2, h2) = sorted_contours[-1]
 
-        MARGIN_FRAME = 0
-
         # self.map_rods_cpu_position(frame)
         self.app.logger.info(self.position_x_rods)
 
-        x_position = x - MARGIN_FRAME
-        y_position = y - MARGIN_FRAME
-        width = x2 + w2 + MARGIN_FRAME
-        height = y2 + h2 + MARGIN_FRAME
+        x_position = x - self.MARGIN_FRAME
+        y_position = y - self.MARGIN_FRAME
+        width = x2 + w2 + self.MARGIN_FRAME
+        height = y2 + h2 + self.MARGIN_FRAME
 
         self.ROI = (x_position, y_position, width, height)
 
