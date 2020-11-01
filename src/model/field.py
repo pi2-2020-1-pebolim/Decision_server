@@ -25,6 +25,9 @@ class Field:
         # Xpixel * scale == Xcm
         self.image_scale = self.real_width / self.img_width
 
+        self.roi_dimensions = None
+        self.roi_scale = None
+
         self.set_lanes_players_positions(lanes)
 
 
@@ -67,19 +70,33 @@ class Field:
         
         self.lanes_real_x_positions = lanes_x_positions
         self.players = players
+
+    def _calculate_ROI_scale(self):
+
+        if self.roi_scale is not None:
+            return
+
+        roi_x, roi_y, roi_end_x, roi_end_y = self.event_controller.image_controller.ROI
+
+        widht = roi_end_x - roi_x
+        height = roi_end_y - roi_y
+
+        self.roi_dimensions = (widht, height)
+        self.roi_scale = self.real_width / widht
+        
         
     def to_real(self, x, y):
-        roi_x, roi_y, _, _ = self.event_controller.image_controller.ROI
+        self._calculate_ROI_scale()
         return (
-            (x - roi_x) * self.image_scale,
-            (y + roi_y) * self.image_scale
+            (x) * self.roi_scale,
+            (y) * self.roi_scale
         )
 
-    def to_pixel(self, x, y):
-        roi_x, roi_y, _, _ = self.event_controller.image_controller.ROI
+    def to_pixel(self, x, y):        
+        self._calculate_ROI_scale()
         return (
-            x / self.image_scale + roi_x,
-            y / self.image_scale - roi_y
+            x / self.roi_scale,
+            y / self.roi_scale
         )
 
     def to_pixel_int(self, x, y):
