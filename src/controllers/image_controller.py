@@ -135,10 +135,7 @@ class ImageController:
                 int(M["m01"] / M["m00"])
             )
 
-            real_center = (
-                self.event_controller.field.to_real(center[0]),
-                self.event_controller.field.to_real(center[1])
-            )
+            real_center = self.event_controller.field.to_real(*center)
 
             self.event_controller.ball.update_position(real_center)
 
@@ -209,14 +206,14 @@ class ImageController:
         # draw current ball position as a text on image
         
         real_position = self.event_controller.ball.real_position_ball
-        pixel_position = self.event_controller.field.convert_tuple_to_pixel(*real_position)
+        pixel_position = self.event_controller.field.to_pixel_int(*real_position)
         cv.putText(
             frame,
-            f'real:{real_position}/pixel:{pixel_position}', 
-            (10,200), 
+            f'r:{(int(real_position[0]), int(real_position[1]))}/p:{pixel_position}', 
+            (15,25), 
             cv.FONT_HERSHEY_SIMPLEX, 
             0.5,
-            (255,255,255),
+            (50,240,255),
             1
         )
 
@@ -224,7 +221,7 @@ class ImageController:
         for player in self.event_controller.field.players:
             cv.circle(
                 frame, 
-                self.event_controller.field.convert_tuple_to_pixel_int(player.xPosition, player.yCenterPosition),
+                self.event_controller.field.to_pixel_int(player.xPosition, player.yCenterPosition),
                 5,
                 (251, 255, 0),
                 1
@@ -234,7 +231,7 @@ class ImageController:
         for index, (x, y) in enumerate(self.event_controller.ball.deque_memory):
             cv.circle(
                 frame, 
-                self.event_controller.field.convert_tuple_to_pixel_int(x, y),
+                self.event_controller.field.to_pixel_int(x, y),
                 1,
                 (0, 0, 255),
                 2 if index < 5 else 1

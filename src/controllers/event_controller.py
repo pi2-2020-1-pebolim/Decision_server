@@ -93,7 +93,8 @@ class EventController:
             self.field = Field(
                 lanes=event['fieldDefinition']['lanes'],
                 dimensions=event['fieldDefinition']['dimensions'],
-                resolution=event['cameraSettings']['resolution']
+                resolution=event['cameraSettings']['resolution'],
+                event_controller=self
             )
 
     def get_field(self):

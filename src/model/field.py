@@ -2,9 +2,10 @@ from model.player import Player
 
 class Field:
 
-    def __init__(self, lanes, dimensions, resolution):
+    def __init__(self, lanes, dimensions, resolution, event_controller):
         
         super().__init__()
+        self.event_controller = event_controller
         
         [self.real_width, self.real_height] = dimensions
         
@@ -66,19 +67,21 @@ class Field:
         
         self.lanes_real_x_positions = lanes_x_positions
         self.players = players
-
-    def to_real(self, x):
-        return x * self.image_scale
-
-    def to_pixel(self, x):
-        return x / self.image_scale
-
-    def convert_tuple_to_pixel(self, x, y):
+        
+    def to_real(self, x, y):
+        roi_x, roi_y, _, _ = self.event_controller.image_controller.ROI
         return (
-            self.to_pixel(x),
-            self.to_pixel(y)
+            (x - roi_x) * self.image_scale,
+            (y + roi_y) * self.image_scale
         )
 
-    def convert_tuple_to_pixel_int(self, x, y):
-        pixel_tuple = self.convert_tuple_to_pixel(x, y) 
+    def to_pixel(self, x, y):
+        roi_x, roi_y, _, _ = self.event_controller.image_controller.ROI
+        return (
+            x / self.image_scale + roi_x,
+            y / self.image_scale - roi_y
+        )
+
+    def to_pixel_int(self, x, y):
+        pixel_tuple = self.to_pixel(x, y)
         return (int(pixel_tuple[0]), int(pixel_tuple[1]))
