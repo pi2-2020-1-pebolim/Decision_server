@@ -60,7 +60,6 @@ class DecisionController:
             }
 
             lanes_x_positions = self.field.lanes_real_x_positions
-
             lanes_y_interception = self.ball.regression.predict(
                 np.array(lanes_x_positions).reshape(-1, 1)
             )
@@ -94,12 +93,21 @@ class DecisionController:
 
         desired_state_for_lane = {}
 
+        ball_y_pos = self.ball.real_position_ball[1]
+
         for i in range(4):
-            desired_state = {
-                "laneID": i,
-                "position": 0,
-                "kick": False
-            }
+            if i > 1:
+                desired_state = {
+                    "laneID": i,
+                    "position": 0,
+                    "kick": False
+                }
+            else:
+                desired_state = {
+                    "laneID": i,
+                    "position": (ball_y_pos - self.field.real_height / 2) * - 1,
+                    "kick": False
+                }
 
             desired_state_for_lane[i] = desired_state
 
@@ -108,7 +116,7 @@ class DecisionController:
         return (decision, "right")
         
     def define_action(self):
-        DECISION_THRESHOLD = 3
+        DECISION_THRESHOLD = 4
 
         self.count_send_decision += 1
 
@@ -118,6 +126,5 @@ class DecisionController:
             
             if decision is not None: 
                 self.socketio.emit('action', decision)
-                self.app.logger.info(decision)
             
             self.count_send_decision = 0
