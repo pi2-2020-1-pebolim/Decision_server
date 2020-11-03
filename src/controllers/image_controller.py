@@ -32,6 +32,7 @@ class ImageController:
         self.MARGIN_FRAME = 0
        
         self.count_send_decision = 0
+        self.latest_decision = None
 
     @property
     def is_calibrated(self):
@@ -224,6 +225,28 @@ class ImageController:
                 (251, 255, 0),
                 1
             )
+
+        # draw decision
+        if self.event_controller.decision_controller.latest_decision is not None:
+            for desiredState in self.event_controller.decision_controller.latest_decision['desiredState']:
+                for player in self.event_controller.field.players:
+                    
+                    if player.laneID != desiredState['laneID']: continue
+
+                    position = (
+                        player.xPosition,
+                        player.yCenterPosition + desiredState['position']
+                    )
+
+                    color = (150, 150, 0) if desiredState['kick'] else (50, 50, 0)
+
+                    cv.circle(
+                        frame, 
+                        self.event_controller.field.to_pixel_int(*position),
+                        5,
+                        color,
+                        1
+                    )
 
         # draw a breadcrumb for the ball
         for index, (x, y) in enumerate(self.event_controller.ball.deque_memory):

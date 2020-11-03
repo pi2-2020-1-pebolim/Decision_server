@@ -24,6 +24,7 @@ class DecisionController:
 
         self.event_controller = event_controller
         self.ball = event_controller.ball
+        self.latest_decision = None
         # self.field is a property function
 
         self.count_send_decision = 0
@@ -126,5 +127,6 @@ class DecisionController:
             
             if decision is not None: 
                 self.socketio.emit('action', decision)
+                self.latest_decision = decision
             
             self.count_send_decision = 0
