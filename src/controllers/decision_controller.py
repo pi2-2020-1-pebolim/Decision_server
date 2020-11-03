@@ -45,13 +45,13 @@ class DecisionController:
         return self.event_controller.get_field()
 
     def verify_inertia(self, direction):
-        if direction is not "stable":
+        if direction != "stable":
             return (None, "left_direction")
         else:
             return (None, "stop")
 
     def calculate_decision(self, direction):
-        if direction is "left":
+        if direction == "left":
 
             decision = {
                 "evenType": "action",
