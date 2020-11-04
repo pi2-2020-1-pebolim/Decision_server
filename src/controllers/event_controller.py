@@ -29,7 +29,7 @@ class EventController:
         self.decision_controller = DecisionController(app, socketio, self) 
 
 
-    def update_event(self, image):
+    def update_event(self, event):
 
         if self.field is None: 
             return
@@ -37,12 +37,17 @@ class EventController:
         # autocalibration for testing
         if not self.image_controller.is_calibrated:
             self.image_controller.calibrate_field(
-                image
+                event['camera']['image']
             )
 
         # debug log
         self.app.logger.info(self.image_controller.ROI)
-        result = self.image_controller.process_image(image)
+        result = self.image_controller.process_image(event['camera']['image'])
+
+        for lane_state in event['lanes']:
+            for player in self.field.players_in_lane[lane_state['laneID']]:
+                player.update_position(lane_state['currentPosition'])
+
         self.decision_controller.define_action()
 
         return result

@@ -64,7 +64,7 @@ class Route:
                 data = loads(request.data)
                 # self.app.logger.info(data["lanes"])
                 self.image = data['camera']['image']
-                field_image = self.event_controller.update_event(self.image)
+                field_image = self.event_controller.update_event(data)
                 
                 if field_image is not None:
                     self.socketio.emit(
