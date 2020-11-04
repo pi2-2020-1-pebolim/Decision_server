@@ -10,6 +10,7 @@ class Field:
         [self.real_width, self.real_height] = dimensions
         
         self.players = []
+        self.players_in_lane = {}
 
         self.lanes_real_x_positions = []
         self.scaled_x_positions = []
@@ -45,7 +46,8 @@ class Field:
             lane_players = []
 
             for player_index in range(lane['playerCount']):
-
+                
+                y_position_adjust_list = None
                 if lane['playerCount'] % 2 == 0:
                     y_position_adjust_list = [0.5, -0.5, 1.5, -1.5]
                 
@@ -67,6 +69,7 @@ class Field:
                 lane_players.append(new_player)
 
             players.extend(lane_players)
+            self.players_in_lane[lane['laneID']] = lane_players
         
         self.lanes_real_x_positions = lanes_x_positions
         self.players = players
