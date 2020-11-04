@@ -202,13 +202,13 @@ class ImageController:
                     3
             )
 
-        # draw current ball position as a text on image
-        
-        real_position = self.event_controller.ball.real_position_ball
+        # draw current ball and direction position as a text on image
+        ball = self.event_controller.ball
+        real_position = ball.real_position_ball
         pixel_position = self.event_controller.field.to_pixel_int(*real_position)
         cv.putText(
             frame,
-            f'r:{(int(real_position[0]), int(real_position[1]))}/p:{pixel_position}', 
+            f'r:{(int(real_position[0]), int(real_position[1]))}/p:{pixel_position}/d:{ball.direction}', 
             (15,25), 
             cv.FONT_HERSHEY_SIMPLEX, 
             0.5,
@@ -230,12 +230,20 @@ class ImageController:
         if self.event_controller.decision_controller.latest_decision is not None:
             for desiredState in self.event_controller.decision_controller.latest_decision['desiredState']:
                 for player in self.event_controller.field.players:
+
+                    frame = cv.line(
+                        frame,
+                        self.event_controller.field.to_pixel_int(player.xPosition, player.yMinPosition),
+                        self.event_controller.field.to_pixel_int(player.xPosition, player.yMaxPosition),
+                        (171, 255, 82),
+                        1
+                    )
                     
                     if player.laneID != desiredState['laneID']: continue
 
                     position = (
                         player.xPosition,
-                        player.yCenterPosition + desiredState['position']
+                        player.yCenterPosition - desiredState['position']
                     )
 
                     color = (150, 150, 0) if desiredState['kick'] else (50, 50, 0)
@@ -243,7 +251,7 @@ class ImageController:
                     cv.circle(
                         frame, 
                         self.event_controller.field.to_pixel_int(*position),
-                        5,
+                        8,
                         color,
                         1
                     )
