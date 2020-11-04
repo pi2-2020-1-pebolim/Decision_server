@@ -11,8 +11,8 @@ socketio = SocketIO(
     cors_allowed_origins="*",
     max_queue=None,
     max_size=None,
-    ping_timeout=1,
-    ping_interval=3
+    ping_timeout=5,
+    ping_interval=10
 )
 routes_inst = Route(app, socketio)
 logging.basicConfig(level=logging.DEBUG)
