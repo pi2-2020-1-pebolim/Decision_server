@@ -238,6 +238,18 @@ class ImageController:
                         (171, 255, 82),
                         1
                     )
+
+                    current_pixel_position = self.event_controller.field.to_pixel_int(
+                        player.xPosition,
+                        player.current_position
+                    )
+                    cv.circle(
+                        frame, 
+                        (current_pixel_position[0], len(frame) - current_pixel_position[1]),
+                        2,
+                        (0, 0, 0),
+                        1
+                    )
                     
                     if player.laneID != desiredState['laneID']: continue
 
