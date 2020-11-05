@@ -99,7 +99,7 @@ class Field:
         self._calculate_ROI_scale()
         return (
             x / self.roi_scale,
-            y / self.roi_scale
+            (self.real_height - y) / self.roi_scale
         )
 
     def to_pixel_int(self, x, y):

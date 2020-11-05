@@ -131,7 +131,7 @@ class ImageController:
             M = cv.moments(max_contour)
             center = (
                 int(M["m10"] / M["m00"]), 
-                int(M["m01"] / M["m00"])
+                len(frame) - int(M["m01"] / M["m00"])
             )
 
             real_center = self.event_controller.field.to_real(*center)
@@ -245,7 +245,7 @@ class ImageController:
                     )
                     cv.circle(
                         frame, 
-                        (current_pixel_position[0], len(frame) - current_pixel_position[1]),
+                        current_pixel_position,
                         2,
                         (0, 0, 0),
                         1
@@ -255,7 +255,7 @@ class ImageController:
 
                     position = (
                         player.xPosition,
-                        player.yCenterPosition - desiredState['position']
+                        player.yCenterPosition + desiredState['position']
                     )
 
                     color = (150, 150, 0) if desiredState['kick'] else (50, 50, 0)
