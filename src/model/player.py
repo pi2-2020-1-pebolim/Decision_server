@@ -21,11 +21,16 @@ class Player:
 
     def clamp_position(self, position):
         
-        converted_position = self.yCenterPosition + position
+        target_position = self.yCenterPosition + position
 
-        if converted_position < self.yMinPosition:
-            return self.yCenterPosition - self.yMinPosition
-        elif converted_position > self.yMaxPosition:
+        # lower than minimum
+        if target_position <= self.yMinPosition:
+            # return as negative value, since the rod should move
+            # downwards
+            return -(self.yCenterPosition - self.yMinPosition)
+        
+        # grater than maximum
+        if target_position >= self.yMaxPosition:
             return self.yMaxPosition - self.yCenterPosition
 
         return position
