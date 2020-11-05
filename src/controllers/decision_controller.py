@@ -82,33 +82,34 @@ class DecisionController:
         closest_player =  min(players, key=lambda p: p.distance_from_point(x, y))
         return closest_player, closest_player.split_distance_from_point(x, y)
 
+    def find_defense_lane(self):
+        
+        lanes_x_positions = self.field.lanes_real_x_positions
+        lanes_y_interception = self.ball.estimate_position(lanes_x_positions)
+
+        real_ball_position = self.ball.real_position_ball
+
+        # the closest lane to the left should follow the ball movement
+        # the others behind it should be on a predicted point
+
+        defense_lane = None
+        for laneID, position in reversed(list(enumerate(lanes_x_positions))):
+            defense_lane = laneID
+
+            # if ball is ahead this is the defense lane is correct
+            if real_ball_position[0] > position:
+                break 
+        
+        return defense_lane, lanes_x_positions, lanes_y_interception, real_ball_position
+
+
     def calculate_decision(self, direction):
         if direction == "left":
 
             # the ball is coming towards our goal, defend it always
-
-            decision = {
-                "evenType": "action",
-                "timestamp": self.get_timtestamp(),
-                "desiredState": []
-            }
             
-            lanes_x_positions = self.field.lanes_real_x_positions
-            lanes_y_interception = self.ball.estimate_position(lanes_x_positions)
-
-            real_ball_position = self.ball.real_position_ball
-
-            # the closest lane to the left should follow the ball movement
-            # the others behind it should be on a predicted point
-
-            defense_lane = None
-            for laneID, position in reversed(list(enumerate(lanes_x_positions))):
-                defense_lane = laneID
-
-                # if ball is ahead this is the defense lane is correct
-                if real_ball_position[0] > position:
-                    break 
-
+            defense_lane, lanes_x_positions, lanes_y_interception, real_ball_position = self.find_defense_lane()
+            
             desired_state_for_lane = {}
             for lane_index, players in self.field.players_in_lane.items():
                 if lane_index == defense_lane:
