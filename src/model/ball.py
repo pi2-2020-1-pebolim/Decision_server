@@ -15,7 +15,7 @@ from model.field import Field
 class Ball:
    
     def __init__(self):
-        self.DEQUE_MAX = 5
+        self.DEQUE_MAX = 3
         self.deque_memory = deque(maxlen=self.DEQUE_MAX)
 
         self.regression = LinearRegression()
