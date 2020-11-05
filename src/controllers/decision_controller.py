@@ -58,6 +58,20 @@ class DecisionController:
         self.last_timestamp += 1
         return self.last_timestamp
 
+    def build_decision(self, desired_state_list):
+        return {
+            "evenType": "action",
+            "timestamp": self.get_timtestamp(),
+            "desiredState": desired_state_list
+        }
+
+    def build_desired_state(self, lane_id, distance, kick):
+        return {
+            "laneID": lane_id,
+            "position": distance,
+            "kick": kick
+        }
+
     def verify_inertia(self, direction):
         if direction != "no_move":
             return (None, "left_direction")
@@ -100,11 +114,12 @@ class DecisionController:
                 if lane_index == defense_lane:
                     
                     closest_player, split_distance = self.find_closest_player(players, *real_ball_position)
-                    desired_state = {
-                        "laneID": lane_index,
-                        "position": closest_player.clamp_position(split_distance[1]),
-                        "kick": 0 < split_distance[0] < 15
-                    }
+                    desired_state = self.build_desired_state(
+                        lane_index,
+                        closest_player.clamp_position(split_distance[1]),
+                        0 < split_distance[0] < 15
+                    )
+                    
                     desired_state_for_lane[lane_index] = desired_state
 
                 elif lane_index < defense_lane:
@@ -119,16 +134,15 @@ class DecisionController:
                         lanes_y_interception[lane_index]
                     )
 
-                    desired_state = {
-                        "laneID": lane_index,
-                        "position": closest_player.clamp_position(split_distance[1]),
-                        "kick": 0 < split_distance[0] < 15
-                    }
+                    desired_state = self.build_desired_state(
+                        lane_index,
+                        closest_player.clamp_position(split_distance[1]),
+                        0 < split_distance[0] < 15
+                    )
+
                     desired_state_for_lane[lane_index] = desired_state
         
-            decision['desiredState'] = list(desired_state_for_lane.values())
-
-            return (decision, "left")
+            return (self.build_decision(list(desired_state_for_lane.values())), "left")
         else:
             return (None, "right_direction")
 
@@ -136,12 +150,6 @@ class DecisionController:
 
         # the ball is moving towards the enemy goal
         # get out of the way and prepare for a counter attack
-
-        decision = {
-            "evenType": "action",
-            "timestamp": self.get_timtestamp(),
-            "desiredState": []
-        }
 
         desired_state_for_lane = {}
 
@@ -165,11 +173,11 @@ class DecisionController:
                     position = player.clamp_position(dist_to_center - (desired_distance - distance[1]))
 
                     
-                    desired_state_for_lane[lane_index] = {
-                        "laneID": lane_index,
-                        "position": position,
-                        "kick": 1 < ball_dist_x < 5
-                    }
+                    desired_state_for_lane[lane_index] = self.build_desired_state(
+                        lane_index,
+                        position,
+                        1 < ball_dist_x < 5
+                    )
 
             # prepare for a counter attack
             elif ball_pos[0] < lanes_x_positions[lane_index]:
@@ -182,15 +190,13 @@ class DecisionController:
                     inverse_interception_point
                 )
 
-                desired_state_for_lane[lane_index] = {
-                    "laneID": lane_index,
-                    "position": player.clamp_position(distance[1]),
-                    "kick": 1 < ball_dist_x < 5
-                }
+                desired_state_for_lane[lane_index] = self.build_desired_state(
+                    lane_index,
+                    player.clamp_position(distance[1]),
+                    1 < ball_dist_x < 5
+                )
 
-        decision['desiredState'] = list(desired_state_for_lane.values())
-
-        return (decision, "right")
+        return (self.build_decision(list(desired_state_for_lane.values())), "right")
         
     def define_action(self):
         DECISION_THRESHOLD = 2
@@ -200,17 +206,8 @@ class DecisionController:
         if self.count_send_decision >= DECISION_THRESHOLD:
             
             decision = self.machine_state.run(self.ball.direction)
-            # decision = {
-            #     "evenType": "action",
-            #     "timestamp": self.get_timtestamp(),
-            #     "desiredState": [
-            #         {
-            #             "laneID": 0,
-            #             "position": 8,
-            #             "kick": False
-            #         }
-            #     ]
-            # }   
+            # decision =  self.build_decision([self.build_desired_state(0, 8, False)])
+               
             
             if decision is not None: 
                 self.socketio.emit('action', decision)
