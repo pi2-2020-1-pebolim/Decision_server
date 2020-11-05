@@ -268,6 +268,24 @@ class ImageController:
                         1
                     )
 
+
+        # draw line to closest player in each lane
+        for _, players in self.event_controller.field.players_in_lane.items():
+            player, _ = self.event_controller.decision_controller.find_closest_player(players, *real_position)
+
+            current_pixel_position = self.event_controller.field.to_pixel_int(
+                player.xPosition,
+                player.current_position
+            )
+
+            frame = cv.line(
+                frame,
+                self.event_controller.field.to_pixel_int(*real_position),
+                current_pixel_position,
+                (171, 255, 82),
+                1
+            )
+
         # draw a breadcrumb for the ball
         for index, (x, y) in enumerate(self.event_controller.ball.deque_memory):
             cv.circle(
