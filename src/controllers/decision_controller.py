@@ -16,6 +16,7 @@ import time
 
 from model.field import Field
 from model.ball import Ball
+from model.player import Player
 from controllers.image_controller import ImageController
 from controllers.machine_state_controller import MachineStateController 
 
@@ -76,7 +77,22 @@ class DecisionController:
         if direction != "no_move":
             return (None, "left_direction")
         else:
-            return (None, "stop")
+
+            # action to perform when no move or very low movement detected
+            defense_lane, _, _, real_ball_position = self.find_defense_lane()
+            
+            desired_states = []
+            for lane_id, players in self.field.players_in_lane.items():
+                
+                if lane_id == defense_lane:
+                    player, dist = self.find_closest_player(players, *real_ball_position)
+                    desired_states.append(self.build_desired_state(
+                        lane_id,
+                        player.clamp_position(dist[1]),
+                        1 < dist[0] < 8
+                    ))
+
+            return (self.build_decision(desired_states), "stop")
 
     def find_closest_player(self, players, x, y):
         closest_player =  min(players, key=lambda p: p.distance_from_point(x, y))
@@ -177,7 +193,7 @@ class DecisionController:
                     desired_state_for_lane[lane_index] = self.build_desired_state(
                         lane_index,
                         position,
-                        1 < ball_dist_x < 5
+                        1 < ball_dist_x < 7
                     )
 
             # prepare for a counter attack
@@ -208,7 +224,22 @@ class DecisionController:
             
             decision = self.machine_state.run(self.ball.direction)
             # decision =  self.build_decision([self.build_desired_state(0, 8, False)])
-               
+            # decision = self.build_decision([
+            #     self.build_desired_state(
+            #         lane_id,
+            #         self.find_closest_player(
+            #             self.field.players_in_lane[lane_id],
+            #             *self.ball.real_position_ball
+            #         )[0].clamp_position(
+            #             self.find_closest_player(
+            #                 self.field.players_in_lane[lane_id],
+            #                 *self.ball.real_position_ball
+            #             )[1][1]
+            #         ),
+            #         False
+            #     ) 
+            #     for lane_id in range(len(self.field.lanes_real_x_positions)) 
+            # ])   
             
             if decision is not None: 
                 self.socketio.emit('action', decision)
