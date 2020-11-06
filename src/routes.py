@@ -1,19 +1,17 @@
 import os
 from flask import jsonify, render_template, request, make_response, json, send_from_directory
 from controllers.image_controller import ImageController
-from flask_socketio import emit, send
+from controllers.event_controller import EventController
+from flask_socketio import emit, send, join_room, leave_room
 
 from json import loads
-
 
 class Route:
     def __init__(self, app, socketio):
         self.app = app
         self.socketio = socketio
-        self.image_inst = ImageController(self.app)
+        self.event_controller = EventController(app, socketio)
         self.image = ''
-        self.calibrate = False
-        self.cordinate_calibration = (0, 0, 0, 0)
 
     def routes(self):
         @self.app.route('/favicon.ico')
@@ -44,13 +42,17 @@ class Route:
         @self.app.route('/calibrate', methods=['GET'])
         def calibrate_screen():
             try:
-                if not self.calibrate:
+                if not self.event_controller.image_controller.is_calibrated:
+
                     self.app.logger.info(self.image)
-                    self.calibrate = True
-                    self.cordinate_calibration = self.image_inst.calibrate_field(
-                        self.image)
-                    self.app.logger.info('passou')
-                    self.app.logger.info(self.cordinate_calibration)
+                    image_controller = self.event_controller.image_controller
+                    
+                    image_controller.calibrate_field(
+                        self.image
+                    )
+                    
+                    self.app.logger.info(image_controller.calibrate_field.ROI)
+                    
                 return {}
             except:
                 return {}
@@ -60,25 +62,31 @@ class Route:
 
             if request.method == 'POST':
                 data = loads(request.data)
+                # self.app.logger.info(data["lanes"])
                 self.image = data['camera']['image']
-
-                if self.calibrate:
-                    # center_pos = self.image_inst.retrieveBallCoordinates(self.image_inst.get_frame(data['camera']['image']))
-
-                    # self.app.logger.info(f"Center: {center_pos[0]}, {center_pos[1]}")
-
-                    field_image = self.image_inst.cut_deal_frame(
-                        self.image, self.cordinate_calibration)
-
-                    self.socketio.emit('update_image', {
-                        'image': f"data:image/jpeg;base64,{field_image}"
-                    })
-
+                field_image = self.event_controller.update_event(data)
+                
+                if field_image is not None:
+                    self.socketio.emit(
+                        'update_image',
+                        {
+                            'image': f"data:image/jpeg;base64,{field_image}"
+                        },
+                        room='web'
+                    )
+       
             return "OK"
+
+        @self.socketio.on('join')
+        def on_join(data):
+            username = data['username']
+            room = data['room']
+            join_room(room)
+            send(username + ' has entered the room.', room=room)
 
         @self.app.route('/api/register', methods=['POST'])
         def register_event():
             data = loads(request.data)
-            self.image_inst.register_event(data)
+            self.event_controller.register_event(data)
 
             return "OK"

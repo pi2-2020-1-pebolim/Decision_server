@@ -8,30 +8,35 @@ import numpy as np
 import imutils
 import cv2 as cv
 import io
+import time
 
+from model.field import Field
+
+
+# calcula o roi
+# gerencia o frame (cuida da imagemm, gerencia debug, encontra posição da bola)
 
 class ImageController:
-    def __init__(self, app):
-        self.deque_memory = deque(maxlen=10)
+    def __init__(self, app, socketio, event_controller):
+       
+        self.socketio = socketio
         self.app = app
-        self.regression = LinearRegression()
+        self.event_controller = event_controller
+
+        self.ROI = None
+       
         self.position_x_rods = []
-        self.direction = 'no_move'
-        self.position_ball = None
+        self.rods_info = []
+       
+        self.half_field_size = 0
+        self.MARGIN_FRAME = 0
+       
         self.count_send_decision = 0
+        self.latest_decision = None
 
-
-    def register_event(self, event):
-        self.app.logger.info(event)
-        real_dimension_field = event['fieldDefinition']['dimensions']
-        self.app.logger.info(real_dimension_field)
-
-        for lane in event['fieldDefinition']['lanes']:
-            resize_measure = (600 * lane['xPosition']) // (real_dimension_field[0] + 65)
-            self.position_x_rods.append(resize_measure)
-
-        # self.app.logger.info(self.position_x_rods)
-        # pass
+    @property
+    def is_calibrated(self):
+        return self.ROI is not None
 
     def get_frame(self, encodedImage):
         decoded_string = Base64Convertion().decode_base_64(encodedImage)
@@ -46,7 +51,7 @@ class ImageController:
 
         # Take frame
         frame = decoded
-        frame = imutils.resize(frame, width=600)
+        # frame = imutils.resize(frame, width=600)
 
         # Convert BGR to HSV
         hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
@@ -78,19 +83,17 @@ class ImageController:
         (x, y, _, _) = sorted_contours[0]
         (x2, y2, w2, h2) = sorted_contours[-1]
 
-        MARGIN_FRAME = 10
-
         # self.map_rods_cpu_position(frame)
         self.app.logger.info(self.position_x_rods)
 
-        return (
-            x - MARGIN_FRAME,
-            y - MARGIN_FRAME,
-            x2 + w2 + MARGIN_FRAME,
-            y2 + h2 + MARGIN_FRAME
-        )
+        x_position = x - self.MARGIN_FRAME
+        y_position = y - self.MARGIN_FRAME
+        width = x2 + w2 + self.MARGIN_FRAME
+        height = y2 + h2 + self.MARGIN_FRAME
 
-    def retrieve_ball_coordinates(self, frame):
+        self.ROI = (x_position, y_position, width, height)
+
+    def retrieve_ball_coordinates(self, frame): 
         # define the lower and upper boundaries of the "white"
         # ball in the HSV color space
         # ball RGB color (0, 0, 0)
@@ -116,7 +119,6 @@ class ImageController:
             mask.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE
         )
         contours = imutils.grab_contours(contours)
-        self.position_ball = None
         center = None
 
         # only proceed if at least one contour was found
@@ -127,9 +129,14 @@ class ImageController:
             max_contour = max(contours, key=cv.contourArea)
             ((x, y), radius) = cv.minEnclosingCircle(max_contour)
             M = cv.moments(max_contour)
-            center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
-            self.position_ball = center
-            self.deque_memory.appendleft(center)
+            center = (
+                int(M["m10"] / M["m00"]), 
+                len(frame) - int(M["m01"] / M["m00"])
+            )
+
+            real_center = self.event_controller.field.to_real(*center)
+
+            self.event_controller.ball.update_position(real_center)
 
             # only proceed if the radius meets a minimum size
             # ball_minimum_size = 1
@@ -143,8 +150,8 @@ class ImageController:
         new_list_positions = list_positions.copy()
         for position in range(len(list_positions)):
             if position != 0:
-              if list_positions[position] - list_positions[position - 1] < 5:
-                new_list_positions.remove(list_positions[position])
+                if list_positions[position] - list_positions[position - 1] < 5:
+                    new_list_positions.remove(list_positions[position])
 
         return new_list_positions
 
@@ -153,8 +160,8 @@ class ImageController:
         hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 
         # define range of blue color in HSV
-        blue_lower = np.array([70,150,150], np.uint8)
-        blue_upper = np.array([140,255,255], np.uint8)
+        blue_lower = np.array([70, 150, 150], np.uint8)
+        blue_upper = np.array([140, 255, 255], np.uint8)
 
         # Threshold the HSV image to get only blue colors
         mask = cv.inRange(hsv, blue_lower, blue_upper)
@@ -164,8 +171,8 @@ class ImageController:
         ret, thresh = cv.threshold(mask, 255, 255, 255)
 
         contours, hierarchy = cv.findContours(
-            mask, 
-            cv.RETR_EXTERNAL, 
+            mask,
+            cv.RETR_EXTERNAL,
             cv.CHAIN_APPROX_SIMPLE
         )
 
@@ -181,91 +188,171 @@ class ImageController:
         self.position_x_rods = self.verify_next_positions(self.position_x_rods)
         self.app.logger.info(self.position_x_rods)
 
-    def estimate_positions(self, frame):
-        if len(self.deque_memory) == 10:
-            x_positions, y_positions = zip(*self.deque_memory)
-            self.regression.fit(    
-                np.array(x_positions).reshape(-1, 1), np.array(y_positions)
+    def _debug_frame(self, frame):
+
+        # debug drawings:
+
+        # draw a line on each rod
+        for i in self.position_x_rods:
+            frame = cv.line(
+                frame,
+                (int(i), int(0)),
+                (int(i), int(300)),
+                    (0, 50, 255),
+                    3
             )
 
-            start_point_x = x_positions[0]
-            end_point_x = x_positions[0]
-            self.direction = 'no_move'
+        # draw current ball and direction position as a text on image
+        ball = self.event_controller.ball
+        real_position = ball.real_position_ball
+        pixel_position = self.event_controller.field.to_pixel_int(*real_position)
+        cv.putText(
+            frame,
+            f'r:{(int(real_position[0]), int(real_position[1]))}/p:{pixel_position}/d:{ball.direction}', 
+            (15,25), 
+            cv.FONT_HERSHEY_SIMPLEX, 
+            0.5,
+            (50,240,255),
+            1
+        )
 
-            if x_positions[-1] - x_positions[0] < 0:
-                start_point_x = x_positions[0]
-                end_point_x = 600
-                self.direction = 'right'
-            elif x_positions[-1] - x_positions[0] > 0:
-                start_point_x = x_positions[0]
-                end_point_x = 0
-                self.direction = 'left'
+        # draw a circle around each player initial position
+        for player in self.event_controller.field.players:
+            cv.circle(
+                frame, 
+                self.event_controller.field.to_pixel_int(player.xPosition, player.yCenterPosition),
+                5,
+                (251, 255, 0),
+                1
+            )
 
-            start_point_y = self.regression.coef_[0] * start_point_x + self.regression.intercept_
-            end_point_y = self.regression.coef_[0] * end_point_x + self.regression.intercept_
-            
-            COLOR_LINE = (0, 50, 255)
-            THICKNESS = 3
+        # draw decision
+        if self.event_controller.decision_controller.latest_decision is not None:
+            for desiredState in self.event_controller.decision_controller.latest_decision['desiredState']:
+                for player in self.event_controller.field.players:
+
+                    frame = cv.line(
+                        frame,
+                        self.event_controller.field.to_pixel_int(player.xPosition, player.yMinPosition),
+                        self.event_controller.field.to_pixel_int(player.xPosition, player.yMaxPosition),
+                        (171, 255, 82),
+                        1
+                    )
+
+                    current_pixel_position = self.event_controller.field.to_pixel_int(
+                        player.xPosition,
+                        player.current_position
+                    )
+                    cv.circle(
+                        frame, 
+                        current_pixel_position,
+                        2,
+                        (0, 0, 0),
+                        1
+                    )
+                    
+                    if player.laneID != desiredState['laneID']: continue
+
+                    position = (
+                        player.xPosition,
+                        player.yCenterPosition + desiredState['position']
+                    )
+
+                    color = (150, 150, 0) if desiredState['kick'] else (50, 50, 0)
+
+                    cv.circle(
+                        frame, 
+                        self.event_controller.field.to_pixel_int(*position),
+                        8,
+                        color,
+                        1
+                    )
+
+
+        # draw line to closest player in each lane
+        for _, players in self.event_controller.field.players_in_lane.items():
+            player, _ = self.event_controller.decision_controller.find_closest_player(players, *real_position)
+
+            current_pixel_position = self.event_controller.field.to_pixel_int(
+                player.xPosition,
+                player.current_position
+            )
 
             frame = cv.line(
-                frame, 
-                (int(start_point_x), int(start_point_y)),
-                (int(end_point_x), int(end_point_y)), 
-                COLOR_LINE, 
-                THICKNESS
+                frame,
+                self.event_controller.field.to_pixel_int(*real_position),
+                current_pixel_position,
+                (171, 255, 82),
+                1
             )
 
-            return frame
+        # draw a breadcrumb for the ball
+        for index, (x, y) in enumerate(self.event_controller.ball.deque_memory):
+            cv.circle(
+                frame, 
+                self.event_controller.field.to_pixel_int(x, y),
+                1,
+                (0, 0, 255),
+                2 if index < 5 else 1
+            )   
 
-    def define_action(self):
-        DECISION_THRESHOLD = 3
-        
-        self.count_send_decision = +self.count_send_decision
+        # draw the predicted movement line
+        ball = self.event_controller.ball
+        most_recent_point = ball.deque_memory[-1]
+        oldest_point = ball.deque_memory[0]
+        frame = cv.line(
+            frame,
+            self.event_controller.field.to_pixel_int(*most_recent_point),
+            self.event_controller.field.to_pixel_int(*oldest_point),
+            (0, 0, 255),
+            1
+        )
 
-        if self.direction == 'left' and self.count_send_decision == DECISION_THRESHOLD:
-            decision = {
-                "evenType": "action",
-                "desiredState": []
-            }
+        diff = (
+            most_recent_point[0] - oldest_point[0] ,
+            most_recent_point[1] - oldest_point[1]
+        )
+        future_point = (
+            oldest_point[0] - diff[0],
+            oldest_point[1] - diff[1]
+        )
+        frame = cv.line(
+            frame,
+            self.event_controller.field.to_pixel_int(*oldest_point),
+            self.event_controller.field.to_pixel_int(*future_point),
+            (50,240,255),
+            1
+        )
+    
+        return frame
 
-            for rod_position in self.position_x_rods:
-                if self.position_ball is not None and rod_position < self.position_ball[0]:
-                    y_regr_position_rod = self.regression.coef_[0] * rod_position + self.regression.intercept_
-
-            self.count_send_decision = 0
-            return decision
-
-
-    def cut_deal_frame(self, image, ROI):
-        decoded_string = Base64Convertion().decode_base_64(image)
+    def decode_frame_from_string(self, image_string):
+        decoded_string = Base64Convertion().decode_base_64(image_string)
         decoded = cv.imdecode(np.frombuffer(decoded_string, np.uint8), -1)
 
         # Take frame
-        frame = decoded
-        frame = imutils.resize(frame, width=600)
+        return decoded
 
-        (x, y, w, h) = ROI
-        frame = frame[y:h, x:w]
+    def encode_string_from_frame(self, frame):
+        
+        _, gray_image_array = cv.imencode('.jpg', frame)
 
-        ball = self.retrieve_ball_coordinates(frame)
-        frame = self.estimate_positions(ball[1])
-
-        COLOR_LINE = (0, 50, 255)
-        THICKNESS = 3
-
-        for i in self.position_x_rods:
-            frame = cv.line(
-                frame, 
-                (int(i), int(0)),
-                (int(i), int(300)), 
-                COLOR_LINE, 
-                THICKNESS
-            )
-
-        # self.map_rods_cpu_position(frame)
-
-        is_success, gray_image_array = cv.imencode('.jpg', frame)
         gray_image = Image.fromarray(gray_image_array)
         encoded_gray_image = Base64Convertion().encode_base_64(
-            gray_image.tobytes()).decode('ascii')
+            gray_image.tobytes()
+        ).decode('ascii')
+
         return encoded_gray_image
+
+    def process_image(self, image):
+        
+        frame = self.decode_frame_from_string(image)
+
+        # cuts frame to show only the ROI
+        (x, y, w, h) = self.ROI
+        frame = frame[y:h, x:w]
+
+        self.retrieve_ball_coordinates(frame)
+        frame = self._debug_frame(frame)
+
+        return self.encode_string_from_frame(frame)
