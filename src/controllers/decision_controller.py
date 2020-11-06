@@ -51,7 +51,7 @@ class DecisionController:
     def field(self) -> Field:
         return self.event_controller.get_field()
 
-    def get_timtestamp(self):
+    def get_timestamp(self):
 
         if self.last_timestamp is None:
             self.last_timestamp = int(time.time())
@@ -62,7 +62,7 @@ class DecisionController:
     def build_decision(self, desired_state_list):
         return {
             "evenType": "action",
-            "timestamp": self.get_timtestamp(),
+            "timestamp": self.get_timestamp(),
             "desiredState": desired_state_list
         }
 
