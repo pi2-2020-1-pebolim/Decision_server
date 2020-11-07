@@ -101,18 +101,18 @@
       <div>
           <button class="btn-pause" onclick="pause()">Pausar</button>
       </div>
-      <span class="player">JOGADOR</span>
-      <span class="machine">MAQUINA</span>
+      <span class="player">AZUL</span>
+      <span class="machine">VERMELHO</span>
     </div>
 
     <script>
 
         function machineGoal() {
-            animate(1, 0);
+            animate(0, 1);
         }
 
         function playerGoal() {
-            animate(0, 1);
+            animate(1, 0);
         }
 
         function finish() {
