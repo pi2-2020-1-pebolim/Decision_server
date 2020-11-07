@@ -64,13 +64,31 @@ class Route:
                 data = loads(request.data)
                 # self.app.logger.info(data["lanes"])
                 self.image = data['camera']['image']
-                field_image = self.event_controller.update_event(data)
+                field_image, red_goal, blue_goal = self.event_controller.update_event(data)
                 
                 if field_image is not None:
                     self.socketio.emit(
                         'update_image',
                         {
                             'image': f"data:image/jpeg;base64,{field_image}"
+                        },
+                        room='web'
+                    )
+
+                if red_goal:
+                    self.socketio.emit(
+                        'update_red_goal',
+                        {
+                            'goal': f"{red_goal}"
+                        },
+                        room='web'
+                    )
+            
+                if blue_goal:
+                    self.socketio.emit(
+                        'update_blue_goal',
+                        {
+                            'goal': f"{blue_goal}"
                         },
                         room='web'
                     )

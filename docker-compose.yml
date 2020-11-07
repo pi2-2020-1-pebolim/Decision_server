@@ -7,3 +7,11 @@ services:
             - '3333:3333'
         volumes:
             - '.:/app'
+
+    app2:
+        container_name: 'decision_server2'
+        build: .
+        ports:
+            - '3334:3333'
+        volumes:
+            - '.:/app'

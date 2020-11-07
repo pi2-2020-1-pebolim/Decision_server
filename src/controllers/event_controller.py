@@ -50,7 +50,18 @@ class EventController:
 
         self.decision_controller.define_action()
 
-        return result
+        red_goal = False
+        blue_goal = False
+
+        if self.ball.deque_memory[0][0] >= 70.0 and self.ball.deque_memory[0][0] <= 76.0 and self.ball.deque_memory[0][1] >= 32.0 and self.ball.deque_memory[0][1] <= 38.0:
+            if self.ball.deque_memory[1][0] > 147.0 and self.ball.deque_memory[1][1] > 24.0 and self.ball.deque_memory[1][1] < 46.0:
+                print("foi gol lado direito")
+                blue_goal = True
+            elif self.ball.deque_memory[1][0] < 3.0 and self.ball.deque_memory[1][1] > 24.0 and self.ball.deque_memory[1][1] < 46.0:
+                print("foi gol lado esquerdo")
+                red_goal = True
+
+        return result, red_goal, blue_goal
 
     def register_event(self, event):
         
