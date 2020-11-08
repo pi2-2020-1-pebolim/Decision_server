@@ -15,6 +15,8 @@ from model.ball import Ball
 from controllers.image_controller import ImageController 
 from controllers.decision_controller import DecisionController 
 
+from collections import deque
+
 class EventController:
 
     def __init__(self, app, socketio):
@@ -26,8 +28,10 @@ class EventController:
         self.ball = Ball()
 
         self.image_controller = ImageController(app, socketio, self)
-        self.decision_controller = DecisionController(app, socketio, self) 
+        self.decision_controller = DecisionController(app, socketio, self)
 
+        self.counter = 0
+        self.execution_times = deque(maxlen = 100)
 
     def update_event(self, event):
 
@@ -48,7 +52,20 @@ class EventController:
             for player in self.field.players_in_lane[lane_state['laneID']]:
                 player.update_position(lane_state['currentPosition'])
 
+        start_time = time.time()
+        self.counter += 1
+        
         self.decision_controller.define_action()
+
+        end_time = time.time()
+        self.execution_times.append(end_time - start_time)
+        self.app.logger.info(f"Medições: {self.counter}")
+        if self.counter % 250 == 0:
+            file_name = f"{time.strftime('%Y%m%d_%H%M%S')}.txt"
+            file = open(file_name, 'a+')
+            for execution_time in self.execution_times:
+                file.write(f"{execution_time}\n")
+            file.close()
 
         return result
 

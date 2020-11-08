@@ -353,6 +353,6 @@ class ImageController:
         frame = frame[y:h, x:w]
 
         self.retrieve_ball_coordinates(frame)
-        # frame = self._debug_frame(frame)
+        frame = self._debug_frame(frame)
 
         return self.encode_string_from_frame(frame)
