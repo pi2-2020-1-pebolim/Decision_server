@@ -6,19 +6,24 @@ description: |
   This snap is the control software for a project for a class on University of Brasilia.
 
 grade: stable # must be 'stable' to release into candidate/stable channels
-confinement: classic # use 'strict' once you have the right plugs and slots
+confinement: strict # use 'strict' once you have the right plugs and slots
 
 apps:
-  autoosball:
-    command: bash start.sh
+  launcher:
+    command: bin/start.sh
 
 parts:
   autoosball:
-    source: https://github.com/pi2-2020-1-pebolim/foosball_decision_server.git
+    source: . #https://github.com/pi2-2020-1-pebolim/foosball_decision_server.git
     build-environment:
       - LANG: C.UTF-8
       - LC_ALL: C.UTF-8
-    build-snaps: [firefox]
     plugin: python
     python-version: 'python3'
-        
+
+  launcher:
+    plugin: dump
+    source: .
+    build-snaps: [firefox]
+    organize:
+      start.sh: bin/

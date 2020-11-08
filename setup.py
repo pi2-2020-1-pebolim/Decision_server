@@ -3,8 +3,8 @@ import setuptools
 long_description = ""
 
 setuptools.setup(
-    name="guilherme1guy-pi2-autoosball", # Replace with your own username
-    version="0.0.1",
+    name="guilherme1guy-pi2-autoosball",
+    version="1",
     author="Guilherme Guy",
     author_email="guilhermeguy349@gmail.com",
     description="",
@@ -17,5 +17,5 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.8',
+    python_requires='>=3',
 )
