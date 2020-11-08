@@ -41,7 +41,7 @@ class EventController:
             )
 
         # debug log
-        self.app.logger.info(self.image_controller.ROI)
+        # self.app.logger.info(self.image_controller.ROI)
         result = self.image_controller.process_image(event['camera']['image'])
 
         for lane_state in event['lanes']:

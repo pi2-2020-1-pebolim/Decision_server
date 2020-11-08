@@ -4,6 +4,9 @@ from controllers.image_controller import ImageController
 from controllers.event_controller import EventController
 from flask_socketio import emit, send, join_room, leave_room
 
+import time
+from collections import deque
+
 from json import loads
 
 class Route:
@@ -12,6 +15,8 @@ class Route:
         self.socketio = socketio
         self.event_controller = EventController(app, socketio)
         self.image = ''
+        self.counter = 0
+        self.execution_times = deque(maxlen = 100)
 
     def routes(self):
         @self.app.route('/favicon.ico')
@@ -44,14 +49,14 @@ class Route:
             try:
                 if not self.event_controller.image_controller.is_calibrated:
 
-                    self.app.logger.info(self.image)
+                    # self.app.logger.info(self.image)
                     image_controller = self.event_controller.image_controller
                     
                     image_controller.calibrate_field(
                         self.image
                     )
                     
-                    self.app.logger.info(image_controller.calibrate_field.ROI)
+                    # self.app.logger.info(image_controller.calibrate_field.ROI)
                     
                 return {}
             except:
@@ -59,6 +64,9 @@ class Route:
 
         @self.app.route('/api/status_update', methods=['POST'])
         def status_update():
+            
+            start_time = time.time()
+            self.counter += 1
 
             if request.method == 'POST':
                 data = loads(request.data)
@@ -74,7 +82,16 @@ class Route:
                         },
                         room='web'
                     )
-       
+
+            self.execution_times.append(time.time() - start_time)
+            self.app.logger.info(f"Medições: {self.counter}")
+            if self.counter % 250 == 0:
+                file_name = f"{time.strftime('%Y%m%d_%H%M%S')}.txt"
+                file = open(file_name, 'a+')
+                for execution_time in self.execution_times:
+                    file.write(f"{execution_time}\n")
+                file.close()
+    
             return "OK"
 
         @self.socketio.on('join')

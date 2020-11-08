@@ -84,7 +84,7 @@ class ImageController:
         (x2, y2, w2, h2) = sorted_contours[-1]
 
         # self.map_rods_cpu_position(frame)
-        self.app.logger.info(self.position_x_rods)
+        # self.app.logger.info(self.position_x_rods)
 
         x_position = x - self.MARGIN_FRAME
         y_position = y - self.MARGIN_FRAME
@@ -186,7 +186,7 @@ class ImageController:
         self.position_x_rods.sort()
 
         self.position_x_rods = self.verify_next_positions(self.position_x_rods)
-        self.app.logger.info(self.position_x_rods)
+        # self.app.logger.info(self.position_x_rods)
 
     def _debug_frame(self, frame):
 
@@ -353,6 +353,6 @@ class ImageController:
         frame = frame[y:h, x:w]
 
         self.retrieve_ball_coordinates(frame)
-        frame = self._debug_frame(frame)
+        # frame = self._debug_frame(frame)
 
         return self.encode_string_from_frame(frame)
