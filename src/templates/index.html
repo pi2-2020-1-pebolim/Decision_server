@@ -46,6 +46,17 @@
                 imageWrapper.src = msg.image;
             })
 
+            socket.on('update_blue_goal', function(msg) {
+                console.log(msg);
+                playerGoal();
+            })
+
+            socket.on('update_red_goal', function(msg) {
+                console.log(msg);
+                machineGoal();
+            })
+
+
             socket.on('connect', function() {
                 console.log('connect');
             });
